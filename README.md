@@ -33,29 +33,29 @@ An enterprise-grade, multi-agent AI ecosystem designed for Saudi Arabian citizen
 ## 🏗️ System Architecture
 
 ```mermaid
-flowchart TD
-    subgraph Client ["Frontend (Next.js 16 App Router)"]
-        U[Citizen / User] -->|Google OAuth / Email| Auth[Supabase Auth]
-        U -->|Chat & Docs| UI[Citizen Portal /chat]
-        A[Admin Officer] -->|Audit & Monitoring| AdminUI[Admin Portal /admin]
+graph TD
+    subgraph Client ["Frontend — Next.js 16 App Router"]
+        U["Citizen / User"] -->|"Google OAuth / Email"| Auth["Supabase Auth"]
+        U -->|"Chat & Document Inquiries"| UI["Citizen Portal (/chat)"]
+        A["Admin Auditor"] -->|"System Monitoring"| AdminUI["Admin Portal (/admin)"]
     end
 
-    subgraph API ["Backend API Gateway (FastAPI)"]
-        UI -->|REST Request| FastApi[/api/v1/chat & /api/v1/documents]
+    subgraph API ["Backend API — FastAPI"]
+        UI -->|"HTTP REST API"| FastApi["FastAPI Gateway (/api/v1)"]
     end
 
     subgraph Agents ["LangGraph Multi-Agent Pipeline"]
-        FastApi --> Classifier[1. Classifier Agent]
-        Classifier -->|Policy Query| RAG[2. Policy RAG Agent]
-        Classifier -->|Document Upload| Verifier[3. Verification Agent]
-        Classifier -->|Complaint / Low Confidence| Escalation[4. Escalation Agent]
-        Classifier -->|Greeting / Basic| General[5. General Agent]
+        FastApi --> Classifier["1. Intent Classifier Agent"]
+        Classifier -->|"Policy Question"| RAG["2. Policy RAG Specialist"]
+        Classifier -->|"Document Verification"| Verifier["3. Verification Agent"]
+        Classifier -->|"Complaint / Low Confidence"| Escalation["4. Escalation Agent"]
+        Classifier -->|"Greeting / General"| General["5. General Agent"]
     end
 
-    subgraph Storage ["Database & Knowledge Base"]
-        RAG -->|pgvector Cosine Search| VectorDB[(Supabase PostgreSQL / pgvector)]
-        RAG -->|LLM Inference| Groq[Groq LLaMA 3.1 8B]
-        Agents -->|Audit Logs & Session History| SupaDB[(Supabase Database)]
+    subgraph Storage ["Database & LLM Engine"]
+        RAG -->|"pgvector Cosine Search"| VectorDB[("Supabase Vector Store")]
+        RAG -->|"LLM Context Inference"| Groq["Groq LLaMA 3.1 8B"]
+        Agents -->|"Audit Logs & Chat History"| SupaDB[("Supabase PostgreSQL Database")]
     end
 ```
 
