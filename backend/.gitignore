@@ -1,10 +1,37 @@
-venv/
-
+# Python
 venv/
 __pycache__/
 *.pyc
-.env
+*.pyo
+*.pyd
 *.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment — NEVER commit secrets!
+.env
+.env.local
+.env.*.local
+
+# Celery
+celery.db
+celerybeat-schedule
+celerybeat.pid
+
+# Logs & temp output
+*.log
+out.txt
+pip_out.txt
+test_out.txt
+
+# OS
 .DS_Store
+Thumbs.db
 
+# IDE
+.vscode/
+.idea/
 
+# Test artifacts
+test_imports.py

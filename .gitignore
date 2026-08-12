@@ -1,0 +1,8 @@
+# Ignore embedded HuggingFace Space clone directory
+govassist-backend/
+
+# Ignore local virtualenvs & temporary files
+venv/
+__pycache__/
+*.env.local
+.DS_Store

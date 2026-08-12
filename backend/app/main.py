@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -25,9 +26,24 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+# CORS — allow local dev + production Vercel frontend
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+]
+
+# Add production frontend URL if set
+frontend_url = getattr(settings, "FRONTEND_URL", None)
+if frontend_url:
+    ALLOWED_ORIGINS.append(frontend_url)
+
+# In development/debug mode also allow all origins
+if settings.DEBUG:
+    ALLOWED_ORIGINS.append("*")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,7 +75,7 @@ async def health_check():
     }
 
 
-# Mount Gradio Interface for Hugging Face Spaces
+# Gradio Interface — mounted at /gradio for Hugging Face Spaces
 try:
     import gradio as gr
     from app.agents.graph import run_agent_pipeline
@@ -73,6 +89,10 @@ try:
         title="GovAssist AI — Saudi Government AI Assistant",
         description="Multi-Agent Policy RAG & Verification Assistant. REST API active at /api/v1/chat",
     )
+
     app = gr.mount_gradio_app(app, gradio_demo, path="/gradio")
+    print("Gradio interface mounted at /gradio")
+
 except Exception as e:
-    print(f"Gradio initialization note: {e}")
+    print(f"Warning: Gradio interface could not be mounted: {e}")
+    print("API will still function normally at /api/v1")

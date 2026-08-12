@@ -14,6 +14,7 @@ export default function ChatPortal() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -77,6 +78,7 @@ export default function ChatPortal() {
     };
     setMessages((prev) => [...prev, newMsg]);
 
+    setIsLoading(true);
     try {
       const res: ChatResponse = await sendMessage({
         citizen_message: userText,
@@ -103,8 +105,22 @@ export default function ChatPortal() {
       };
 
       setMessages((prev) => [...prev, agentMsg]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "agent",
+          agent_name: "System Error",
+          content: lang === "ar" 
+            ? "حدث خطأ أثناء الاتصال بالخادم. يرجى التأكد من إعدادات HF Space Secrets وإعادة المحاولة."
+            : "⚠️ Unable to get a response from the backend. The server might be warming up (first load takes ~1 min) or check HF Space Secrets & CORS settings.",
+          timestamp: new Date().toISOString(),
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
