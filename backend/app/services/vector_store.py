@@ -14,20 +14,25 @@ def similarity_search(
     """
     Embed query -> pgvector cosine similarity search on policy_documents.
     Returns list of matching chunks with content + source_url.
+    Safe fallback if database RPC or connection fails.
     """
-    query_embedding = embed_text(query)
-    k = top_k or settings.TOP_K_RESULTS
+    try:
+        query_embedding = embed_text(query)
+        k = top_k or settings.TOP_K_RESULTS
 
-    response = client.rpc(
-        "match_policy_documents",
-        {
-            "query_embedding": query_embedding,
-            "match_count": k,
-            "filter_language": language,
-        },
-    ).execute()
+        response = client.rpc(
+            "match_policy_documents",
+            {
+                "query_embedding": query_embedding,
+                "match_count": k,
+                "filter_language": language,
+            },
+        ).execute()
 
-    return response.data or []
+        return response.data or []
+    except Exception as err:
+        print(f"[VectorStore] Similarity search error: {err}")
+        return []
 
 
 def ingest_policy_document(
@@ -55,8 +60,12 @@ def ingest_policy_document(
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings))
     ]
 
-    client.table("policy_documents").insert(rows).execute()
-    return len(rows)
+    try:
+        client.table("policy_documents").insert(rows).execute()
+        return len(rows)
+    except Exception as err:
+        print(f"[VectorStore] Ingest error: {err}")
+        return 0
 
 
 def log_agent_action(

@@ -1,8 +1,12 @@
 from groq import Groq
 from app.core.config import get_settings
 
-settings = get_settings()
-_client = Groq(api_key=settings.GROQ_API_KEY)
+
+def get_groq_client() -> Groq:
+    """Lazy initialize Groq client so module import never crashes."""
+    settings = get_settings()
+    api_key = settings.GROQ_API_KEY if settings.GROQ_API_KEY else "gsk_dummy_key_for_startup"
+    return Groq(api_key=api_key)
 
 
 def call_llm(
@@ -11,7 +15,9 @@ def call_llm(
     max_tokens: int = None,
 ) -> str:
     """Single LLM call — returns plain text response."""
-    response = _client.chat.completions.create(
+    settings = get_settings()
+    client = get_groq_client()
+    response = client.chat.completions.create(
         model=settings.LLM_MODEL,
         max_tokens=max_tokens or settings.MAX_TOKENS,
         messages=[
@@ -29,8 +35,6 @@ def call_llm_json(
 ) -> str:
     """
     LLM call expecting JSON output.
-    System prompt must instruct model to return only valid JSON.
-    Caller is responsible for json.loads() on the result.
     """
     json_system = (
         f"{system_prompt}\n\n"
