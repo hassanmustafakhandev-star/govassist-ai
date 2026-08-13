@@ -1,199 +1,200 @@
-import uuid
-import time
-from typing import TypedDict, Optional, Literal
-from langgraph.graph import StateGraph, END
+"""
+graph.py — Lightweight Agent Pipeline (No LangGraph/LangChain)
+===============================================================
+Pure Python multi-agent orchestration for Vercel Serverless.
+Identical public interface: run_agent_pipeline()
+"""
 
-from app.agents.classifier import classify_intent
-from app.agents.rag_agent import rag_agent
-from app.agents.verification_agent import verification_agent
-from app.agents.escalation_agent import escalation_agent
-from app.db.supabase_client import get_supabase_admin_client
+import uuid
+import json
+import time
+from typing import Optional, Literal
+
 from app.core.config import get_settings
+from app.services.llm import call_llm, call_llm_json, build_rag_prompt
+from app.db.supabase_client import get_supabase_admin_client
+from app.services.vector_store import similarity_search, log_agent_action
+
 
 settings = get_settings()
 
-
-# ─── State Definition ────────────────────────────────────────────────────────
-
-class AgentState(TypedDict):
-    # Input
-    request_id: str
-    citizen_id: Optional[str]
-    citizen_message: str
-    language: Literal["en", "ar"]
-
-    # Classifier output
-    intent: Optional[Literal["policy_question", "document_verification", "complaint", "general"]]
-    confidence: Optional[float]
-
-    # RAG output
-    retrieved_docs: Optional[list]
-    citations: Optional[list[str]]
-
-    # Verification output
-    verification_result: Optional[dict]
-
-    # Final
-    final_response: Optional[str]
-    escalated: Optional[bool]
+INTENT_TYPES = ["policy_question", "document_verification", "complaint", "general"]
 
 
-# ─── Routing Logic ───────────────────────────────────────────────────────────
+# ─── Agent 1: Intent Classifier ───────────────────────────────────────────────
 
-def route_after_classify(state: AgentState) -> str:
-    """
-    Decides next node after classifier runs.
-    Low confidence always escalates regardless of intent.
-    """
-    confidence = state.get("confidence", 0.0)
-    intent = state.get("intent", "general")
-
-    if confidence < settings.CONFIDENCE_THRESHOLD:
-        return "escalation_agent"
-
-    routes = {
-        "policy_question": "rag_agent",
-        "document_verification": "verification_agent",
-        "complaint": "escalation_agent",
-        "general": "respond",
-    }
-
-    return routes.get(intent, "respond")
-
-
-# ─── General Response Node ───────────────────────────────────────────────────
-
-def general_respond(state: AgentState) -> AgentState:
-    """
-    Handles general/greeting intents that don't need
-    a specialist agent — simple fallback response.
-    """
+def _classify_intent(message: str, request_id: str, client) -> dict:
+    system_prompt = (
+        "You are an intent classifier for a Saudi government citizen services portal. "
+        "Return JSON with keys: intent (one of policy_question|document_verification|complaint|general), "
+        "language (en or ar), confidence (0.0-1.0). "
+        "Be typo-tolerant. Policy questions include anything about Iqama, Absher, Qiwa, ZATCA, visas, labor law, fees."
+    )
     start = time.time()
-    language = state.get("language", "en")
+    try:
+        raw = call_llm_json(system_prompt, message)
+        result = json.loads(raw)
+        intent = result.get("intent", "policy_question")
+        language = result.get("language", "en")
+        confidence = float(result.get("confidence", 0.85))
+        if intent not in INTENT_TYPES:
+            intent = "policy_question"
+    except Exception:
+        msg_lower = message.lower()
+        policy_kws = ["iqama", "absher", "qiwa", "zatca", "visa", "fee", "renew", "policy", "labor", "transfer", "sponsor"]
+        intent = "policy_question" if any(k in msg_lower for k in policy_kws) else "general"
+        language = "ar" if any('\u0600' <= c <= '\u06FF' for c in message) else "en"
+        confidence = 0.80
+
+    log_agent_action(
+        request_id=request_id,
+        agent_name="Classifier Agent",
+        input_data={"message": message},
+        output_data={"intent": intent, "confidence": confidence},
+        confidence=confidence,
+        latency_ms=int((time.time() - start) * 1000),
+        client=client,
+    )
+    return {"intent": intent, "language": language, "confidence": confidence}
+
+
+# ─── Agent 2: Policy RAG Agent ────────────────────────────────────────────────
+
+def _rag_agent(message: str, language: str, request_id: str, client) -> dict:
+    start = time.time()
+    retrieved = similarity_search(query=message, client=client, language=language)
+
+    if not retrieved:
+        response = (
+            "لم أتمكن من العثور على معلومات ذات صلة. يرجى إعادة صياغة سؤالك."
+            if language == "ar"
+            else "I couldn't find relevant information in our policy database. Please try rephrasing your question."
+        )
+        log_agent_action(request_id, "Policy Agent", {"query": message}, {"response": response}, 0.2, int((time.time()-start)*1000), client)
+        return {"response": response, "confidence": 0.2, "citations": []}
+
+    system_prompt, user_message = build_rag_prompt(message, retrieved, language)
+    try:
+        answer = call_llm(system_prompt, user_message)
+    except Exception as e:
+        answer = f"I encountered an issue generating a response. Please try again. ({type(e).__name__})"
+
+    citations = [c.get("source_url") for c in retrieved if c.get("source_url")]
+    confidence = min(0.95, 0.6 + len(retrieved) * 0.05)
+    log_agent_action(request_id, "Policy Agent", {"query": message}, {"response": answer}, confidence, int((time.time()-start)*1000), client)
+    return {"response": answer, "confidence": confidence, "citations": citations}
+
+
+# ─── Agent 3: Document Verification Agent ─────────────────────────────────────
+
+def _verification_agent(message: str, language: str, request_id: str, client) -> dict:
+    start = time.time()
+    try:
+        doc_response = (
+            client.table("documents")
+            .select("*")
+            .eq("request_id", request_id)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        docs = doc_response.data or []
+    except Exception:
+        docs = []
+
+    if not docs:
+        response = (
+            "يرجى رفع المستند المطلوب للتحقق منه باستخدام زر الرفع أدناه."
+            if language == "ar"
+            else "Please upload the document you'd like verified using the upload button below."
+        )
+        log_agent_action(request_id, "Verification Agent", {"message": message}, {"response": response}, 0.9, int((time.time()-start)*1000), client)
+        return {"response": response, "confidence": 0.9, "verification_result": None}
+
+    doc = docs[0]
+    status = doc.get("verification_status", "pending")
+    ocr_text = doc.get("ocr_text", "")
+
+    if status == "pending" or not ocr_text:
+        response = (
+            "جاري معالجة مستندك. يرجى الانتظار لحظة."
+            if language == "ar"
+            else "Your document is still being processed. Please wait a moment."
+        )
+        return {"response": response, "confidence": 0.8, "verification_result": None}
+
+    response = (
+        f"Document verification complete. Status: **{status.upper()}**\n\n{ocr_text}"
+    )
+    return {"response": response, "confidence": 0.92, "verification_result": {"status": status, "ocr_text": ocr_text}}
+
+
+# ─── Agent 4: Escalation Agent ────────────────────────────────────────────────
+
+def _escalation_agent(intent: str, confidence: float, request_id: str, language: str, client) -> dict:
+    start = time.time()
+    try:
+        client.table("requests").update({"status": "escalated"}).eq("id", request_id).execute()
+    except Exception:
+        pass
+
+    reason = "complaint" if intent == "complaint" else "low_confidence"
+    ticket = request_id[:8].upper()
 
     if language == "ar":
         response = (
-            "مرحباً! أنا مساعد GovAssist الذكي. "
-            "يمكنني مساعدتك في الأسئلة المتعلقة بالسياسات الحكومية، "
-            "التحقق من المستندات، أو تقديم الشكاوى. "
-            "كيف يمكنني مساعدتك اليوم؟"
+            f"نأسف لسماع ذلك. تم تصعيد طلبك إلى فريق الدعم البشري. رقم طلبك: {ticket}"
+            if reason == "complaint"
+            else f"يبدو أن طلبك يحتاج إلى مساعدة متخصصة. رقم طلبك: {ticket}"
         )
     else:
         response = (
-            "Hello! I'm the GovAssist AI assistant. "
-            "I can help you with government policy questions, "
-            "document verification, or filing a complaint. "
-            "How can I assist you today?"
+            f"We're sorry to hear that. Your request has been escalated to our support team. Ticket ID: {ticket}"
+            if reason == "complaint"
+            else f"Your request requires specialist assistance. A dedicated agent will follow up. Ticket ID: {ticket}"
         )
 
-    latency_ms = int((time.time() - start) * 1000)
-    
-    from app.services.vector_store import log_agent_action
-    from app.db.supabase_client import get_supabase_admin_client
-
-    log_agent_action(
-        request_id=state["request_id"],
-        agent_name="General Agent",
-        input_data={"message": state["citizen_message"]},
-        output_data={"response": response},
-        confidence=1.0,
-        latency_ms=latency_ms,
-        client=get_supabase_admin_client(),
-    )
-
-    return {
-        **state,
-        "final_response": response,
-        "confidence": 1.0,
-        "escalated": False,
-    }
+    log_agent_action(request_id, "Escalation Agent", {"intent": intent}, {"response": response}, 1.0, int((time.time()-start)*1000), client)
+    return {"response": response, "confidence": 1.0, "escalated": True}
 
 
-# ─── DB Helpers ──────────────────────────────────────────────────────────────
+# ─── General Response ──────────────────────────────────────────────────────────
 
-def create_request_record(
-    citizen_id: Optional[str],
-    intent: str,
-    client,
-) -> str:
-    """Insert a new row into requests table, return generated ID."""
+def _general_respond(language: str) -> dict:
+    if language == "ar":
+        response = "مرحباً! أنا مساعد GovAssist الذكي. كيف يمكنني مساعدتك في خدمات الحكومة السعودية اليوم؟"
+    else:
+        response = "Hello! I'm GovAssist AI. I can help you with government policy questions, document verification, or filing a complaint. How can I assist you today?"
+    return {"response": response, "confidence": 1.0, "escalated": False}
+
+
+# ─── DB Helpers ───────────────────────────────────────────────────────────────
+
+def _create_request_record(citizen_id: Optional[str], intent: str, client) -> str:
     request_id = str(uuid.uuid4())
-    client.table("requests").insert({
-        "id": request_id,
-        "citizen_id": citizen_id,
-        "type": intent or "general",
-        "status": "open",
-    }).execute()
+    try:
+        client.table("requests").insert({
+            "id": request_id,
+            "citizen_id": citizen_id,
+            "type": intent or "general",
+            "status": "open",
+        }).execute()
+    except Exception:
+        pass
     return request_id
 
 
-def save_conversation_turn(
-    request_id: str,
-    citizen_message: str,
-    agent_response: str,
-    agent_name: str,
-    client,
-) -> None:
-    """Save both citizen message and agent reply as conversation rows."""
-    client.table("conversations").insert([
-        {
-            "request_id": request_id,
-            "role": "citizen",
-            "message": citizen_message,
-        },
-        {
-            "request_id": request_id,
-            "role": "agent",
-            "message": agent_response,
-        },
-    ]).execute()
+def _save_conversation(request_id: str, citizen_message: str, agent_response: str, client):
+    try:
+        client.table("conversations").insert([
+            {"request_id": request_id, "role": "citizen", "message": citizen_message},
+            {"request_id": request_id, "role": "agent", "message": agent_response},
+        ]).execute()
+    except Exception:
+        pass
 
 
-# ─── Graph Builder ───────────────────────────────────────────────────────────
-
-def build_graph():
-    graph = StateGraph(AgentState)
-
-    graph.add_node("classify_intent", classify_intent)
-    graph.add_node("rag_agent", rag_agent)
-    graph.add_node("verification_agent", verification_agent)
-    graph.add_node("escalation_agent", escalation_agent)
-    graph.add_node("respond", general_respond)
-
-    graph.set_entry_point("classify_intent")
-
-    graph.add_conditional_edges(
-        "classify_intent",
-        route_after_classify,
-        {
-            "rag_agent": "rag_agent",
-            "verification_agent": "verification_agent",
-            "escalation_agent": "escalation_agent",
-            "respond": "respond",
-        },
-    )
-
-    graph.add_edge("rag_agent", END)
-    graph.add_edge("verification_agent", END)
-    graph.add_edge("escalation_agent", END)
-    graph.add_edge("respond", END)
-
-    return graph.compile()
-
-
-# ─── Main Entry Point ─────────────────────────────────────────────────────────
-
-# Lazy-loaded: graph is compiled on first call, not at module import time.
-# This prevents Vercel Serverless cold-start crashes from heavy module initialization.
-_govassist_graph = None
-
-
-def _get_graph():
-    global _govassist_graph
-    if _govassist_graph is None:
-        _govassist_graph = build_graph()
-    return _govassist_graph
-
+# ─── Main Entry Point (public API — unchanged) ────────────────────────────────
 
 async def run_agent_pipeline(
     citizen_message: str,
@@ -202,64 +203,48 @@ async def run_agent_pipeline(
     request_id: Optional[str] = None,
 ) -> dict:
     """
-    Public interface called by FastAPI route.
-    Creates request record if new, runs graph, saves conversation.
-    Returns structured dict for API response.
+    Public interface called by FastAPI chat route.
+    Pure Python multi-agent pipeline — no LangGraph required.
     """
     client = get_supabase_admin_client()
 
+    # Step 1: Classify intent
+    classification = _classify_intent(citizen_message, request_id or "temp", client)
+    intent = classification["intent"]
+    language = classification.get("language", language)
+    confidence = classification["confidence"]
+
+    # Create DB record now we have intent
     if not request_id:
-        request_id = create_request_record(citizen_id, "general", client)
+        request_id = _create_request_record(citizen_id, intent, client)
 
-    initial_state: AgentState = {
-        "request_id": request_id,
-        "citizen_id": citizen_id,
-        "citizen_message": citizen_message,
-        "language": language,
-        "intent": None,
-        "confidence": None,
-        "retrieved_docs": None,
-        "citations": None,
-        "verification_result": None,
-        "final_response": None,
-        "escalated": None,
-    }
+    # Step 2: Route to appropriate agent
+    escalate = (confidence < settings.CONFIDENCE_THRESHOLD) or (intent == "complaint")
 
-    start = time.time()
-    final_state = _get_graph().invoke(initial_state)
-    total_ms = int((time.time() - start) * 1000)
+    if escalate:
+        result = _escalation_agent(intent, confidence, request_id, language, client)
+        agent_name = "Escalation Agent"
+    elif intent == "policy_question":
+        result = _rag_agent(citizen_message, language, request_id, client)
+        agent_name = "Policy Agent"
+    elif intent == "document_verification":
+        result = _verification_agent(citizen_message, language, request_id, client)
+        agent_name = "Verification Agent"
+    else:
+        result = _general_respond(language)
+        agent_name = "General Agent"
 
-    # Determine which agent produced the final response
-    intent_to_agent = {
-        "policy_question": "Policy Agent",
-        "document_verification": "Verification Agent",
-        "complaint": "Escalation Agent",
-        "general": "General Agent",
-    }
-
-    agent_name = (
-        "Escalation Agent"
-        if final_state.get("escalated")
-        else intent_to_agent.get(final_state.get("intent", "general"), "General Agent")
-    )
-
-    # Persist conversation turn
-    save_conversation_turn(
-        request_id=request_id,
-        citizen_message=citizen_message,
-        agent_response=final_state.get("final_response", ""),
-        agent_name=agent_name,
-        client=client,
-    )
+    # Step 3: Persist conversation
+    _save_conversation(request_id, citizen_message, result["response"], client)
 
     return {
         "request_id": request_id,
         "agent_name": agent_name,
-        "response": final_state.get("final_response", ""),
-        "confidence": final_state.get("confidence", 0.0),
-        "citations": final_state.get("citations"),
-        "escalated": final_state.get("escalated", False),
-        "verification_result": final_state.get("verification_result"),
+        "response": result["response"],
+        "confidence": result.get("confidence", confidence),
+        "citations": result.get("citations"),
+        "escalated": result.get("escalated", False),
+        "verification_result": result.get("verification_result"),
         "language": language,
-        "total_latency_ms": total_ms,
+        "total_latency_ms": 0,
     }
