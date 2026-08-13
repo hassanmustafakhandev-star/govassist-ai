@@ -7,21 +7,21 @@ class Settings(BaseSettings):
     APP_NAME: str = "GovAssist AI"
     DEBUG: bool = False
     API_VERSION: str = "v1"
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "*"
 
-    # Supabase
-    SUPABASE_URL: str
-    SUPABASE_ANON_KEY: str
-    SUPABASE_SERVICE_ROLE_KEY: str
+    # Supabase — Safe default so missing env vars don't crash startup
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
 
     # Groq
-    GROQ_API_KEY: str
+    GROQ_API_KEY: str = ""
     LLM_MODEL: str = "llama-3.1-8b-instant"
     MAX_TOKENS: int = 1024
 
-    # Celery (SQLite default)
-    CELERY_BROKER_URL: str = "sqla+sqlite:///celery.db"
-    CELERY_RESULT_BACKEND: str = "db+sqlite:///celery.db"
+    # Celery
+    CELERY_BROKER_URL: str = "memory://"
+    CELERY_RESULT_BACKEND: str = "cache+memory://"
 
     # RAG
     EMBEDDING_MODEL: str = "BAAI/bge-m3"

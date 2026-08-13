@@ -1,30 +1,22 @@
-from sentence_transformers import SentenceTransformer
-from functools import lru_cache
-import numpy as np
+import httpx
 from app.core.config import get_settings
 
 settings = get_settings()
 
 
-import httpx
-
-@lru_cache()
-def get_embedding_model():
-    """Lazy loads local model as fallback if HF API is unavailable."""
-    from sentence_transformers import SentenceTransformer
-    print(f"Loading local embedding model fallback: {settings.EMBEDDING_MODEL}")
-    return SentenceTransformer(settings.EMBEDDING_MODEL)
-
-
 def embed_text(text: str) -> list[float]:
     """
-    Embed a single string.
-    First tries Hugging Face Inference API (Fast, 0 RAM usage).
-    Falls back to local sentence_transformers if offline.
+    Embed a single string via Hugging Face Inference API.
+    Fast, 0MB RAM usage, perfect for serverless (Vercel/Cloud functions).
     """
     try:
         url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{settings.EMBEDDING_MODEL}"
-        res = httpx.post(url, json={"inputs": text}, timeout=8.0)
+        headers = {}
+        # If HF_TOKEN is optionally provided in settings
+        if getattr(settings, "HF_TOKEN", None):
+            headers["Authorization"] = f"Bearer {settings.HF_TOKEN}"
+
+        res = httpx.post(url, json={"inputs": text}, headers=headers, timeout=10.0)
         if res.status_code == 200:
             data = res.json()
             if isinstance(data, list) and len(data) > 0:
@@ -32,29 +24,32 @@ def embed_text(text: str) -> list[float]:
                     return data
                 elif isinstance(data[0], list) and isinstance(data[0][0], float):
                     return data[0]
+        else:
+            print(f"[Embeddings] HF API Returned status {res.status_code}: {res.text}")
     except Exception as err:
-        print(f"Hugging Face API embed fallback triggered: {err}")
+        print(f"[Embeddings] HF API call error: {err}")
 
-    # Fallback to local model if API call fails
-    model = get_embedding_model()
-    return model.encode(text, normalize_embeddings=True).tolist()
+    # Fallback zero-vector if external API fails (prevents serverless crash)
+    return [0.0] * 1024
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed a list of strings."""
     try:
         url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{settings.EMBEDDING_MODEL}"
-        res = httpx.post(url, json={"inputs": texts}, timeout=12.0)
+        headers = {}
+        if getattr(settings, "HF_TOKEN", None):
+            headers["Authorization"] = f"Bearer {settings.HF_TOKEN}"
+
+        res = httpx.post(url, json={"inputs": texts}, headers=headers, timeout=15.0)
         if res.status_code == 200:
             data = res.json()
             if isinstance(data, list) and isinstance(data[0], list):
                 return data
     except Exception as err:
-        print(f"Hugging Face API batch embed fallback triggered: {err}")
+        print(f"[Embeddings] HF API batch embed error: {err}")
 
-    model = get_embedding_model()
-    embeddings = model.encode(texts, normalize_embeddings=True, batch_size=32)
-    return embeddings.tolist()
+    return [[0.0] * 1024 for _ in texts]
 
 
 def chunk_text(
@@ -64,7 +59,6 @@ def chunk_text(
 ) -> list[str]:
     """
     Simple word-level chunker with overlap.
-    Used when ingesting policy documents into policy_documents table.
     """
     words = text.split()
     chunks = []

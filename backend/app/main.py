@@ -26,24 +26,10 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# CORS — allow local dev + production Vercel frontend
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-]
-
-# Add production frontend URL if set
-frontend_url = getattr(settings, "FRONTEND_URL", None)
-if frontend_url:
-    ALLOWED_ORIGINS.append(frontend_url)
-
-# In development/debug mode also allow all origins
-if settings.DEBUG:
-    ALLOWED_ORIGINS.append("*")
-
+# CORS — allow all origins so production frontend on Vercel never hits CORS error
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,26 +59,3 @@ async def health_check():
         "app": settings.APP_NAME,
         "version": settings.API_VERSION,
     }
-
-
-# Gradio Interface — mounted at /gradio for Hugging Face Spaces
-try:
-    import gradio as gr
-    from app.agents.graph import run_agent_pipeline
-
-    async def gradio_fn(message, history):
-        res = await run_agent_pipeline(citizen_message=message, language="en")
-        return res.get("response", "")
-
-    gradio_demo = gr.ChatInterface(
-        fn=gradio_fn,
-        title="GovAssist AI — Saudi Government AI Assistant",
-        description="Multi-Agent Policy RAG & Verification Assistant. REST API active at /api/v1/chat",
-    )
-
-    app = gr.mount_gradio_app(app, gradio_demo, path="/gradio")
-    print("Gradio interface mounted at /gradio")
-
-except Exception as e:
-    print(f"Warning: Gradio interface could not be mounted: {e}")
-    print("API will still function normally at /api/v1")
