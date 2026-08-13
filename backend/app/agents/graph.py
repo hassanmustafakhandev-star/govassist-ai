@@ -183,7 +183,16 @@ def build_graph():
 
 # ─── Main Entry Point ─────────────────────────────────────────────────────────
 
-govassist_graph = build_graph()
+# Lazy-loaded: graph is compiled on first call, not at module import time.
+# This prevents Vercel Serverless cold-start crashes from heavy module initialization.
+_govassist_graph = None
+
+
+def _get_graph():
+    global _govassist_graph
+    if _govassist_graph is None:
+        _govassist_graph = build_graph()
+    return _govassist_graph
 
 
 async def run_agent_pipeline(
@@ -217,7 +226,7 @@ async def run_agent_pipeline(
     }
 
     start = time.time()
-    final_state = govassist_graph.invoke(initial_state)
+    final_state = _get_graph().invoke(initial_state)
     total_ms = int((time.time() - start) * 1000)
 
     # Determine which agent produced the final response

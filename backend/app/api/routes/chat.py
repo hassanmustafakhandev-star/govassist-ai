@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
 from app.schemas.chat import ChatRequest, ChatResponse, AgentResponse, ConversationHistory, ConversationMessage
-from app.agents.graph import run_agent_pipeline
 from app.core.dependencies import get_db
 from datetime import datetime
 
@@ -21,6 +20,8 @@ async def chat(
     returns structured agent response.
     """
     try:
+        # Lazy import — prevents LangGraph from loading at module import time
+        from app.agents.graph import run_agent_pipeline
         result = await run_agent_pipeline(
             citizen_message=payload.citizen_message,
             language=payload.language,
@@ -32,6 +33,7 @@ async def chat(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Agent pipeline failed: {str(e)}",
         )
+
 
     return ChatResponse(
         request_id=result["request_id"],
