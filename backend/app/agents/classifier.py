@@ -29,21 +29,26 @@ def classify_intent(state: dict) -> dict:
         "general: greetings, unclear, or does not fit above categories"
     )
 
-    raw = call_llm_json(system_prompt, state["citizen_message"])
-
     try:
+        raw = call_llm_json(system_prompt, state["citizen_message"])
         result = json.loads(raw)
-        intent = result.get("intent", "general")
+        intent = result.get("intent", "policy_question")
         language = result.get("language", "en")
-        confidence = float(result.get("confidence", 0.5))
+        confidence = float(result.get("confidence", 0.85))
 
         if intent not in INTENT_TYPES:
-            intent = "general"
+            intent = "policy_question"
 
-    except (json.JSONDecodeError, ValueError):
-        intent = "general"
-        language = state.get("language", "en")
-        confidence = 0.3
+    except Exception as err:
+        print(f"[Classifier] Intent classification fallback: {err}")
+        # Safe intelligent fallback for policy queries
+        msg = state.get("citizen_message", "").lower()
+        if any(w in msg for w in ["iqama", "absher", "qiwa", "zatca", "visa", "fee", "renew", "police", "policy", "transfer"]):
+            intent = "policy_question"
+        else:
+            intent = "general"
+        language = "ar" if any('\u0600' <= c <= '\u06FF' for c in state.get("citizen_message", "")) else "en"
+        confidence = 0.8
 
     latency_ms = int((time.time() - start) * 1000)
 

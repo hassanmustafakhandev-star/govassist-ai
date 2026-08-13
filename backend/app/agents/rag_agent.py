@@ -49,7 +49,16 @@ def rag_agent(state: dict) -> dict:
         language=state.get("language", "en"),
     )
 
-    answer = call_llm(system_prompt, user_message)
+    try:
+        answer = call_llm(system_prompt, user_message)
+    except Exception as err:
+        print(f"[RAG Agent] LLM generation fallback: {err}")
+        answer = (
+            "عذراً، أواجه مشكلة مؤقتة في الاتصال بخدمة الذكاء الاصطناعي. يرجى المحاولة مرة أخرى بعد قليل."
+            if state.get("language") == "ar"
+            else "I am currently experiencing a temporary connection issue with the AI service. Please try asking again in a moment."
+        )
+
     citations = [
         chunk.get("source_url")
         for chunk in retrieved
