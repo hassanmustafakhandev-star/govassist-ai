@@ -9,12 +9,10 @@ import time
 def process_document_ocr(self, document_id: str, file_bytes: bytes) -> dict:
     """
     Portfolio-Ready Document Verification Worker.
-    Extracts & verifies document details via LLM simulation/analysis
-    without requiring external Tesseract OCR installation on the host system.
+    Extracts & verifies document details via LLM simulation/analysis.
+    Works seamlessly in both Celery background workers and Vercel Serverless.
     """
     try:
-        time.sleep(1.5)  # Simulate fast processing delay for realistic UX
-
         # Smart extraction prompt
         system_prompt = (
             "You are a Saudi Government Document Verification Specialist. "
@@ -56,10 +54,11 @@ def process_document_ocr(self, document_id: str, file_bytes: bytes) -> dict:
 
         # Update Supabase Documents Table
         client = get_supabase_admin_client()
-        client.table("documents").update({
-            "ocr_text": ocr_summary_text,
-            "verification_status": verification_status,
-        }).eq("id", document_id).execute()
+        if client:
+            client.table("documents").update({
+                "ocr_text": ocr_summary_text,
+                "verification_status": verification_status,
+            }).eq("id", document_id).execute()
 
         return {
             "document_id": document_id,
@@ -68,4 +67,7 @@ def process_document_ocr(self, document_id: str, file_bytes: bytes) -> dict:
         }
 
     except Exception as exc:
-        raise self.retry(exc=exc)
+        if hasattr(self, "retry"):
+            raise self.retry(exc=exc)
+        print(f"[OCR Worker Error]: {exc}")
+        return {"document_id": document_id, "status": "failed"}
