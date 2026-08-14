@@ -2,7 +2,7 @@
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16_App_Router-black?logo=next.js)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-orange)](https://langchain-ai.github.io/langgraph/)
+[![Vercel Serverless](https://img.shields.io/badge/Vercel-Serverless_Deployed-black?logo=vercel)](https://vercel.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_pgvector-green?logo=supabase)](https://supabase.com/)
 [![Groq LLaMA 3.1](https://img.shields.io/badge/Groq-LLaMA_3.1_8B-purple)](https://groq.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -13,7 +13,7 @@ An enterprise-grade, multi-agent AI ecosystem designed for Saudi Arabian citizen
 
 ## 🌟 Key Capabilities
 
-- **🤖 Multi-Agent Graph Architecture (LangGraph)**
+- **🤖 Multi-Agent Pipeline Architecture**
   - **Intent Classifier Agent**: Detects citizen language (*Arabic / English*), intent, and request urgency with typo tolerance.
   - **Policy RAG Specialist Agent**: Retrieves precise facts from Saudi policy database (*Absher, Qiwa, ZATCA, Labor Law, GOSI*) using `BAAI/bge-m3` embeddings & pgvector cosine search.
   - **Document Verification Agent**: Inspects uploaded Iqamas, Commercial Registrations (CR), and National IDs for authenticity and validity.
@@ -25,7 +25,7 @@ An enterprise-grade, multi-agent AI ecosystem designed for Saudi Arabian citizen
 
 - **📊 Comprehensive Admin Audit Portal (`/admin`)**
   - Live metric dashboards: Total Requests Today, Average Agent Confidence, and Escalation Rate %.
-  - Real-time agent action feed with low-confidence red alerts.
+  - Real-time agent action feed with low-confidence alerts.
   - Agent log filtering and CSV export for compliance reporting.
 
 ---
@@ -33,18 +33,18 @@ An enterprise-grade, multi-agent AI ecosystem designed for Saudi Arabian citizen
 ## 🏗️ System Architecture
 
 ```mermaid
-graph TD
-    subgraph Client ["Frontend — Next.js 16 App Router"]
+flowchart TD
+    subgraph Client["Frontend — Next.js 16 App Router"]
         U["Citizen / User"] -->|"Google OAuth / Email"| Auth["Supabase Auth"]
         U -->|"Chat & Document Inquiries"| UI["Citizen Portal (/chat)"]
         A["Admin Auditor"] -->|"System Monitoring"| AdminUI["Admin Portal (/admin)"]
     end
 
-    subgraph API ["Backend API — FastAPI"]
-        UI -->|"HTTP REST API"| FastApi["FastAPI Gateway (/api/v1)"]
+    subgraph API["Backend API — FastAPI (Vercel Serverless)"]
+        UI -->|"REST API Call"| FastApi["FastAPI Gateway (/api/v1)"]
     end
 
-    subgraph Agents ["LangGraph Multi-Agent Pipeline"]
+    subgraph Agents["Autonomous Multi-Agent Pipeline"]
         FastApi --> Classifier["1. Intent Classifier Agent"]
         Classifier -->|"Policy Question"| RAG["2. Policy RAG Specialist"]
         Classifier -->|"Document Verification"| Verifier["3. Verification Agent"]
@@ -52,10 +52,10 @@ graph TD
         Classifier -->|"Greeting / General"| General["5. General Agent"]
     end
 
-    subgraph Storage ["Database & LLM Engine"]
-        RAG -->|"pgvector Cosine Search"| VectorDB[("Supabase Vector Store")]
-        RAG -->|"LLM Context Inference"| Groq["Groq LLaMA 3.1 8B"]
-        Agents -->|"Audit Logs & Chat History"| SupaDB[("Supabase PostgreSQL Database")]
+    subgraph Storage["Database & LLM Engine"]
+        RAG -->|"Vector Search"| VectorDB[("Supabase Vector Store (pgvector)")]
+        RAG -->|"Inference"| Groq["Groq LLaMA 3.1 8B"]
+        Agents -->|"Logs & History"| SupaDB[("Supabase PostgreSQL Database")]
     end
 ```
 
@@ -63,15 +63,14 @@ graph TD
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Next.js 16 (App Router), TypeScript, Vanilla CSS Design System |
-| **Backend Framework** | FastAPI (Python 3.11), Pydantic v2, Uvicorn |
-| **Agent Orchestration** | LangGraph, LangChain Core |
-| **LLM Engine** | Groq API (`llama-3.1-8b-instant`) |
-| **Embeddings & Vector Store** | `BAAI/bge-m3` (Sentence-Transformers) + Supabase `pgvector` |
-| **Authentication & Database** | Supabase Auth (Google OAuth 2.0 + PKCE), PostgreSQL |
-| **Background Tasks** | Celery + SQLite Queue |
+| Layer | Technology | Description |
+|---|---|---|
+| **Frontend** | Next.js 16 (App Router), TypeScript, Vanilla CSS Design System | Responsive citizen & admin portal |
+| **Backend Framework** | FastAPI (Python 3.11), Pydantic v2, Uvicorn | High-performance REST API |
+| **Deployment** | Vercel Serverless Functions | Zero cold-start latency, auto-scaling |
+| **LLM Engine** | Groq API (`llama-3.1-8b-instant`) | Sub-second generative response |
+| **Embeddings & Vector Store** | `BAAI/bge-m3` + Supabase `pgvector` | Multilingual semantic retrieval |
+| **Authentication & Database** | Supabase Auth (Google OAuth 2.0 + PKCE), PostgreSQL | Managed DB & secure authentication |
 
 ---
 
@@ -81,6 +80,7 @@ graph TD
 - Node.js `18.x` or higher
 - Python `3.10` or `3.11`
 - Supabase Account & Project
+- Groq API Key
 
 ---
 
@@ -115,7 +115,7 @@ Run the backend server:
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
-Backend API will be live at `http://localhost:8000` (Docs: `http://localhost:8000/docs`).
+Backend API will be live at `http://localhost:8000` (Docs: `http://localhost:8000/api/docs`).
 
 ---
 
@@ -127,8 +127,6 @@ cd frontend
 
 # Install dependencies
 npm install
-
-# Configure environment variables
 ```
 
 Create `frontend/.env.local`:
@@ -148,8 +146,8 @@ Open `http://localhost:3000` in your browser.
 
 ## 🌐 Production Deployment
 
-- **Frontend**: Deploy on **Vercel** (`Root Directory: frontend`)
-- **Backend**: Deploy on **Hugging Face Spaces** (Docker SDK) or **Render**
+- **Frontend**: Deployed on **Vercel** (`Root Directory: frontend`)
+- **Backend**: Deployed on **Vercel Serverless** (`Root Directory: backend`)
 - **Database & Auth**: Managed by **Supabase**
 
 ---
@@ -160,6 +158,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-<p center="align">
+<p align="center">
   <strong>GovAssist AI</strong> — Engineered for Saudi Government Digital Transformation 🇸🇦
 </p>
