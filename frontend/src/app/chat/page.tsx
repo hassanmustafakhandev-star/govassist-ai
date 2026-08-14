@@ -114,8 +114,8 @@ export default function ChatPortal() {
           role: "agent",
           agent_name: "System Error",
           content: lang === "ar" 
-            ? "حدث خطأ أثناء الاتصال بالخادم. يرجى التأكد من إعدادات HF Space Secrets وإعادة المحاولة."
-            : "⚠️ Unable to get a response from the backend. The server might be warming up (first load takes ~1 min) or check HF Space Secrets & CORS settings.",
+            ? "حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى."
+            : "⚠️ Unable to connect to the backend service. Please try again in a few moments.",
           timestamp: new Date().toISOString(),
         }
       ]);

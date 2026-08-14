@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+supabase
+groq
+httpx
+pydantic
+pydantic-settings
+python-multipart
