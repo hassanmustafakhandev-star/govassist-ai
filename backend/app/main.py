@@ -55,6 +55,16 @@ app.include_router(
 )
 
 
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "message": "GovAssist AI Backend",
+        "status": "running",
+        "docs": "/api/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {
