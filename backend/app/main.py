@@ -26,14 +26,17 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# CORS — allow all origins so production frontend on Vercel never hits CORS error
+# CORS — allow all origins for Vercel frontend
+# NOTE: allow_credentials MUST be False when allow_origins=["*"]
+# (Starlette raises ValueError otherwise — crashes cold start)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 app.include_router(
     chat.router,
