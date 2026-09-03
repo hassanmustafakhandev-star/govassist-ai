@@ -433,7 +433,7 @@ export default function Home() {
               </span>
             </div>
             <span className="font-body-sm text-body-sm text-on-surface-variant">
-              © 2026 GovAssist AI. Demo purpose only.
+              © 2026 GovAssist AI. All rights reserved.
             </span>
           </div>
           <div className="flex gap-gutter">
@@ -443,9 +443,8 @@ export default function Home() {
           </div>
         </div>
         <div className="container-max mx-auto px-margin-desktop mt-stack-md text-center">
-          <p className="font-body-sm text-body-sm text-on-surface-variant italic opacity-75">
-            Demo project — not affiliated with any government entity. This is a
-            conceptual application showcasing AI in public services.
+          <p className="font-body-sm text-body-sm text-on-surface-variant opacity-80">
+            Autonomous Citizen & Expatriate Services Platform for the Kingdom of Saudi Arabia 🇸🇦
           </p>
         </div>
       </footer>

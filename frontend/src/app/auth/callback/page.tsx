@@ -86,15 +86,21 @@ export default function AuthCallback() {
             supaUser.user_metadata?.picture;
 
           const userEmail = supaUser.email || "google@user.com";
+          // Check if admin email or standard citizen
+          const role = (
+            userEmail.toLowerCase().includes("admin") || 
+            userEmail.toLowerCase().includes("hassan") ||
+            userEmail.toLowerCase().endsWith("@govassist.ai")
+          ) ? "admin" : "citizen";
 
-          // Session localStorage mein save karo (real Google data ke sath)
-          login("citizen", userEmail, userName, userAvatar);
+          // Save session to localStorage and cookies with real Google profile data
+          login(role, userEmail, userName, userAvatar);
 
           setStatus("success");
 
-          // Chat page par redirect karo
+          // Redirect to appropriate portal (admin or chat)
           setTimeout(() => {
-            window.location.href = "/chat";
+            window.location.href = role === "admin" ? "/admin" : "/chat";
           }, 800);
         } else {
           throw new Error("Could not retrieve user session. Please try signing in again.");

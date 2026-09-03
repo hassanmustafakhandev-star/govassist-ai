@@ -16,8 +16,8 @@ class Settings(BaseSettings):
 
     # Groq
     GROQ_API_KEY: str = ""
-    LLM_MODEL: str = "llama-3.1-8b-instant"
-    MAX_TOKENS: int = 1024
+    LLM_MODEL: str = "llama-3.3-70b-versatile"
+    MAX_TOKENS: int = 2048
 
     # Celery
     CELERY_BROKER_URL: str = "memory://"

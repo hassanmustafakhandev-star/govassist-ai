@@ -7,6 +7,111 @@ import { useLanguage } from "../../context/LanguageContext";
 import { sendMessage, getHistory, uploadDocument, pollDocumentStatus } from "../../lib/api";
 import { ConversationMessage, ChatResponse } from "../../types";
 
+/**
+ * FormattedChatContent
+ * Renders professional human-like messages with bolding, lists, links, and Arabic RTL support.
+ */
+function FormattedChatContent({ content }: { content: string }) {
+  const isArabic = /[\u0600-\u06FF]/.test(content);
+
+  // Helper to parse bold **text** and links [title](url) or raw URLs
+  const renderInline = (text: string) => {
+    // Regex for bold **...** and markdown links [text](url)
+    const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s)]+)/g);
+    return parts.map((part, idx) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={idx} className="font-bold text-primary dark:text-inverse-primary">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch) {
+        return (
+          <a
+            key={idx}
+            href={linkMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-secondary font-semibold hover:underline bg-secondary-container/40 px-1.5 py-0.5 rounded text-xs mx-0.5"
+          >
+            <span>{linkMatch[1]}</span>
+            <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+          </a>
+        );
+      }
+      if (part.startsWith("http://") || part.startsWith("https://")) {
+        return (
+          <a
+            key={idx}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-secondary font-semibold hover:underline bg-secondary-container/40 px-1.5 py-0.5 rounded text-xs mx-0.5 break-all"
+          >
+            <span>{part.replace(/^https?:\/\/(www\.)?/, "")}</span>
+            <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+          </a>
+        );
+      }
+      return <span key={idx}>{part}</span>;
+    });
+  };
+
+  const lines = content.split("\n");
+
+  return (
+    <div className={`space-y-2 text-sm leading-relaxed ${isArabic ? "text-right font-sans" : "text-left"}`} dir={isArabic ? "rtl" : "ltr"}>
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={i} className="h-1.5" />;
+        }
+
+        // Heading ###
+        if (trimmed.startsWith("### ")) {
+          return (
+            <h4 key={i} className="font-bold text-base text-primary mt-2 mb-1">
+              {renderInline(trimmed.replace(/^###\s+/, ""))}
+            </h4>
+          );
+        }
+
+        // Bullet point (•, -, *)
+        if (/^[•\-*]\s+/.test(trimmed)) {
+          return (
+            <div key={i} className={`flex items-start gap-2 ${isArabic ? "mr-1" : "ml-1"}`}>
+              <span className="text-secondary font-bold text-sm shrink-0 mt-0.5">•</span>
+              <span className="flex-1">{renderInline(trimmed.replace(/^[•\-*]\s+/, ""))}</span>
+            </div>
+          );
+        }
+
+        // Numbered list (1., 2., etc.)
+        const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+        if (numMatch) {
+          return (
+            <div key={i} className={`flex items-start gap-2.5 my-1 ${isArabic ? "mr-1" : "ml-1"}`}>
+              <span className="w-5 h-5 rounded-full bg-primary-container text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                {numMatch[1]}
+              </span>
+              <span className="flex-1 leading-snug">{renderInline(numMatch[2])}</span>
+            </div>
+          );
+        }
+
+        // Standard paragraph
+        return (
+          <p key={i} className="leading-relaxed">
+            {renderInline(trimmed)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ChatPortal() {
   const { lang, setLang } = useLanguage();
   const [authorized, setAuthorized] = useState(false);
@@ -244,14 +349,18 @@ export default function ChatPortal() {
             </button>
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline-block text-xs bg-surface-container-high px-2.5 py-1 rounded-full text-on-surface-variant font-medium">
-                {getUser()?.email || "citizen@govassist.ai"}
+                {getUser()?.name || getUser()?.email || "citizen@govassist.ai"}
               </span>
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
-                <img
-                  className="w-full h-full object-cover"
-                  alt="Government administrative officer"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBf8XXzfeMFMzOiQWYa27d0DMs37GzR599fbbzbwL3zELtwqaFwZdDWufFIMXg9ai-j7tT3iDR9y_gs2834GYbIhZLAkf5QV8TqBVCYCqD4Gzli3JM_nkiscb8nJE74IhOSttzS33m3kebA1oRATEnlbeI43Bqu8icVwOMhiliDyp6D-8QQpEDn7yqpwqhpyedhK7l1KMZMsoNbliUk8nwELH0tkNBYZ18pyrevc5PwCtkg9Ws8bmpw1F7t3ZKZ9KfOo1Q00gVr5ir"
-                />
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-surface-container flex items-center justify-center">
+                {getUser()?.avatar ? (
+                  <img
+                    className="w-full h-full object-cover"
+                    alt={getUser()?.name || "User"}
+                    src={getUser()?.avatar}
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-[18px] text-primary">person</span>
+                )}
               </div>
             </div>
           </div>
@@ -448,9 +557,13 @@ export default function ChatPortal() {
                         : "bg-white border border-outline-variant text-on-surface rounded-tl-none shadow-sm"
                     }`}
                   >
-                    <p className="font-body-md text-body-md whitespace-pre-line">
-                      {msg.content}
-                    </p>
+                    {isCitizen ? (
+                      <p className="font-body-md text-body-md whitespace-pre-line">
+                        {msg.content}
+                      </p>
+                    ) : (
+                      <FormattedChatContent content={msg.content} />
+                    )}
                   </div>
                 </div>
               );
@@ -527,7 +640,7 @@ export default function ChatPortal() {
       <footer className="bg-surface-container dark:bg-surface-container-high border-t border-outline-variant dark:border-outline w-full py-2 z-50 shrink-0">
         <div className="flex flex-row justify-between items-center px-margin-desktop h-8">
           <span className="font-label-md text-label-md font-bold text-on-surface-variant">
-            © 2026 GovAssist AI. Demo purpose only.
+            © 2026 GovAssist AI. All rights reserved.
           </span>
           <div className="flex gap-stack-md">
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:underline" href="/legal">Privacy Policy</Link>
