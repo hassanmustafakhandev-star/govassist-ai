@@ -2,13 +2,14 @@ from typing import Optional, List, Tuple
 from groq import Groq
 from app.core.config import get_settings
 
-# Active and production-ready models on Groq with graceful fallback
+# Active and verified production models on Groq with graceful fallback
 SUPPORTED_MODELS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-    "llama3-70b-8192",
-    "llama-3.2-11b-text-preview",
-    "mixtral-8x7b-32768",
+    "qwen/qwen3.8-27b",
+    "groq/compound",
+    "groq/compound-mini",
+    "qwen/qwen3.6-27b",
+    "allam-2-7b",
+    "openai/gpt-oss-20b",
 ]
 
 
@@ -27,7 +28,7 @@ def call_llm(
 ) -> str:
     """
     Call LLM with automated model fallback.
-    Tries configured primary model (llama-3.3-70b-versatile), and if deprecated or unavailable,
+    Tries configured primary model (qwen/qwen3.8-27b), and if unavailable,
     seamlessly cascades through fallback models so the user always gets a response.
     """
     settings = get_settings()
@@ -72,13 +73,51 @@ def call_llm_json(
     """
     LLM call strictly expecting valid JSON output.
     """
-    json_system = (
-        f"{system_prompt}\n\n"
-        "STRICT REQUIREMENT: Respond with 100% valid JSON only. "
-        "Do NOT include markdown formatting, backticks, code fences, or explanations. "
-        "Just the raw JSON object."
-    )
-    return call_llm(json_system, user_message, max_tokens=max_tokens, temperature=0.1)
+    settings = get_settings()
+    client = get_groq_client()
+    tokens = max_tokens or 512
+
+    models_to_try: List[str] = [settings.LLM_MODEL] + [
+        m for m in SUPPORTED_MODELS if m != settings.LLM_MODEL
+    ]
+
+    for model_name in models_to_try:
+        try:
+            response = client.chat.completions.create(
+                model=model_name,
+                max_tokens=tokens,
+                temperature=0.1,
+                response_format={"type": "json_object"},
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            f"{system_prompt}\n\n"
+                            "STRICT REQUIREMENT: Respond with 100% valid JSON only. "
+                            "No markdown code blocks, no backticks, no explanations."
+                        ),
+                    },
+                    {"role": "user", "content": user_message},
+                ],
+            )
+            content = response.choices[0].message.content
+            if content and content.strip():
+                return content.strip()
+        except Exception as err:
+            print(f"[LLM JSON] Model {model_name} json_mode error: {err}. Trying standard call...")
+            try:
+                # Fallback to text prompt if response_format unsupported
+                raw = call_llm(
+                    f"{system_prompt}\n\nOutput strictly valid JSON only.",
+                    user_message,
+                    max_tokens=tokens,
+                    temperature=0.1,
+                )
+                return raw
+            except Exception:
+                continue
+
+    raise RuntimeError("All models failed for JSON generation.")
 
 
 def build_rag_prompt(
