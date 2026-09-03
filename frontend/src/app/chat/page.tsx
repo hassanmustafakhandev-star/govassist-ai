@@ -62,7 +62,11 @@ function FormattedChatContent({ content }: { content: string }) {
   const lines = content.split("\n");
 
   return (
-    <div className={`space-y-2 text-sm leading-relaxed ${isArabic ? "text-right font-sans" : "text-left"}`} dir={isArabic ? "rtl" : "ltr"}>
+    <div
+      className={`space-y-2 text-sm leading-relaxed ${isArabic ? "text-right" : "text-left"}`}
+      dir={isArabic ? "rtl" : "ltr"}
+      style={{ unicodeBidi: "embed" }}
+    >
       {lines.map((line, i) => {
         const trimmed = line.trim();
         if (!trimmed) {
@@ -520,6 +524,9 @@ export default function ChatPortal() {
               const isCitizen = msg.role === "citizen";
               const timeString = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               
+              // Detect if agent message content is Arabic to flip bubble alignment
+              const isAgentArabic = !isCitizen && /[\u0600-\u06FF]/.test(msg.content);
+
               let badgeText = msg.agent_name || "Agent";
               let badgeStyle = "bg-surface-variant text-on-surface-variant border border-outline/20";
               
@@ -535,10 +542,14 @@ export default function ChatPortal() {
                 <div
                   key={msg.id}
                   className={`flex flex-col ${
-                    isCitizen ? "items-end ml-auto" : "items-start"
+                    isCitizen
+                      ? "items-end ml-auto"
+                      : isAgentArabic
+                      ? "items-end mr-auto"  /* Arabic agent: bubble on the right, text RTL */
+                      : "items-start"         /* English agent: bubble on the left, text LTR */
                   } max-w-[80%]`}
                 >
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className={`flex items-center gap-2 mb-2 ${isAgentArabic ? "flex-row-reverse" : ""}`}>
                     {!isCitizen && (
                       <span
                         className={`px-2 py-0.5 rounded font-label-sm text-[10px] uppercase font-bold tracking-tight ${badgeStyle}`}
@@ -551,10 +562,12 @@ export default function ChatPortal() {
                     </span>
                   </div>
                   <div
-                    className={`p-4 rounded-xl ${
+                    className={`p-4 ${
                       isCitizen
-                        ? "bg-primary text-white rounded-tr-none"
-                        : "bg-white border border-outline-variant text-on-surface rounded-tl-none shadow-sm"
+                        ? "bg-primary text-white rounded-xl rounded-tr-none"
+                        : isAgentArabic
+                        ? "bg-white border border-outline-variant text-on-surface rounded-xl rounded-tr-none shadow-sm"  /* Arabic: no top-right corner */
+                        : "bg-white border border-outline-variant text-on-surface rounded-xl rounded-tl-none shadow-sm"  /* English: no top-left corner */
                     }`}
                   >
                     {isCitizen ? (
