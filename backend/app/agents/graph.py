@@ -253,29 +253,33 @@ def _escalation_agent(intent: str, confidence: float, request_id: str, language:
 # ─── General Agent (Warm Welcome & Navigation) ────────────────────────────────
 
 def _general_respond(message: str, language: str) -> dict:
-    # Use LLM to generate a natural, welcoming, highly contextual human greeting
+    """Handle greetings and general portal inquiries with warm, human-like responses."""
     system_prompt = (
         "You are GovAssist AI — a distinguished, warm, and highly courteous Senior Saudi Government Services Advisor. "
         "The citizen is greeting you or asking what you can do. Respond with maximum warmth, human charm, and helpfulness.\n\n"
         "GUIDELINES:\n"
-        "- In ARABIC: Greet with genuine warmth ('أهلاً وسهلاً بك في منصة المساعد الحكومي الذكي للمملكة العربية السعودية...'). "
-        "Briefly highlight how you can assist with: تجديد الإقامات والتأشيرات عبر أبشر، عقود العمل ونقل الكفالة عبر قوى، "
-        "السجلات التجارية والرخص، فحص الوثائق الرسمية، أو تقديم الاعتراضات والشكاوى.\n"
-        "- In ENGLISH: Warm executive welcome ('Welcome to GovAssist AI — your dedicated advisory portal for Saudi government services...'). "
-        "Mention key areas of assistance (Iqama renewals, exit/re-entry visas, Qiwa labor contracts, document verification, ZATCA tax).\n"
-        "- In other languages: Greet warmly and explain your capabilities in that language.\n"
-        "Keep it inviting, professional, and conclude with an open question ready to solve their inquiry."
+        "- In ARABIC: Greet with genuine warmth. "
+        "Briefly highlight how you can assist with Iqama renewals on Absher, labor contracts and sponsorship transfer on Qiwa, "
+        "commercial registrations, document verification, and complaints.\n"
+        "- In ENGLISH: Warm executive welcome. "
+        "Mention: Iqama renewals, exit/re-entry visas, Qiwa labor contracts, document verification, ZATCA tax, and complaint escalation.\n"
+        "- In other languages: Greet warmly and explain capabilities in that language.\n"
+        "Keep it inviting, professional, and conclude with an open question ready to solve their inquiry.\n"
+        "IMPORTANT: Do NOT mention Arabic portal names or Arabic script if responding in English. Use only English names (Absher, Qiwa, ZATCA, Muqeem)."
     )
     try:
         answer = call_llm(system_prompt, message, temperature=0.7)
-    except Exception:
+        if not answer or not answer.strip():
+            raise ValueError("Empty LLM response")
+    except Exception as e:
+        print(f"[General Agent] LLM failed: {e}. Using static response.")
         if language == "ar":
             answer = (
                 "أهلاً وسهلاً بك في منصة المساعد الحكومي الذكي للمملكة العربية السعودية 🇸🇦\n\n"
                 "يسعدني ويشرفني تقديم المساعدة الشاملة لك في كافة المعاملات الحكومية، ومنها:\n"
                 "• **خدمات الإقامة والجوازات:** تجديد الإقامة، رسوم المرافقين، تأشيرات الخروج والعودة عبر منصة أبشر ومقيم.\n"
                 "• **خدمات العمل والتوظيف:** نقل الكفالة، توثيق العقود، ونظام العمل عبر منصة قوى.\n"
-                "• **الأعمال والشركات:** السجلات التجارية، رخص بلدي، والامتثال الضريبي لدى هيئة الزكاة والضريبة والجمارك (ZATCA).\n"
+                "• **الأعمال والشركات:** السجلات التجارية، رخص بلدي، والامتثال الضريبي لدى هيئة الزكاة والضريبة والجمارك.\n"
                 "• **التحقق من الوثائق:** تدقيق الهويات والتراخيص بصورة فورية.\n\n"
                 "تفضل بطرح سؤالك وسأكون سعيداً بإرشادك خطوة بخطوة!"
             )
@@ -284,9 +288,9 @@ def _general_respond(message: str, language: str) -> dict:
                 "Welcome to GovAssist AI — your premier digital advisory portal for Saudi Government Services 🇸🇦\n\n"
                 "It is a pleasure to assist you. I can guide you through verified procedures, official fees, and step-by-step requirements for:\n"
                 "• **Residency & Passports:** Iqama renewals, dependent fees, and exit/re-entry visas via Absher and Muqeem.\n"
-                "• **Labor & Employment:** Sponsorship transfer (نقل الكفالة), work contracts, and regulations via Qiwa.\n"
+                "• **Labor & Employment:** Sponsorship transfer, work contracts, and labor regulations via Qiwa.\n"
                 "• **Business & Commerce:** Commercial Registration (CR), municipal licenses, and ZATCA tax/VAT compliance.\n"
-                "• **Document Verification:** Instant biometric-grade analysis of official permits and IDs.\n\n"
+                "• **Document Verification:** Instant analysis of official permits and IDs.\n\n"
                 "How may I assist you with your government transaction today?"
             )
 

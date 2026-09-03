@@ -12,7 +12,11 @@ import { ConversationMessage, ChatResponse } from "../../types";
  * Renders professional human-like messages with bolding, lists, links, and Arabic RTL support.
  */
 function FormattedChatContent({ content }: { content: string }) {
-  const isArabic = /[\u0600-\u06FF]/.test(content);
+  // Detect Arabic: only RTL if >25% of letter characters are Arabic script
+  // This prevents English responses containing Arabic portal names from flipping RTL
+  const arabicLetters = (content.match(/[\u0600-\u06FF]/g) || []).length;
+  const totalLetters = (content.match(/[a-zA-Z\u0600-\u06FF]/g) || []).length;
+  const isArabic = totalLetters > 0 && (arabicLetters / totalLetters) > 0.25;
 
   // Helper to parse bold **text** and links [title](url) or raw URLs
   const renderInline = (text: string) => {
