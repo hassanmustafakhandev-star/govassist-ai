@@ -128,6 +128,8 @@ def _rag_agent(message: str, language: str, request_id: str, client) -> dict:
             citations = ["https://qiwa.sa", "https://hrsd.gov.sa"]
         elif any(k in msg_lower for k in ["tax", "vat", "zatca", "invoice", "ضريبة", "زكاة"]):
             citations = ["https://zatca.gov.sa"]
+        elif any(k in msg_lower for k in ["ai", "invest", "rhq", "sdaia", "transcendence", "vision 2030", "tech", "ذكاء", "استثمار", "تقنية", "مقرات"]):
+            citations = ["https://investsaudi.sa", "https://sdaia.gov.sa", "https://vision2030.gov.sa"]
         elif any(k in msg_lower for k in ["cr", "commercial", "balady", "سجل", "بلدي"]):
             citations = ["https://mc.gov.sa", "https://balady.gov.sa"]
         else:

@@ -27,6 +27,7 @@ export interface ConversationMessage {
   content: string;
   agent_name?: string;
   confidence?: number;
+  citations?: string[];
   timestamp: string;
 }
 

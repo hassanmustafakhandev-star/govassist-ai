@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # Groq
     GROQ_API_KEY: str = ""
     LLM_MODEL: str = "qwen/qwen3.8-27b"
-    MAX_TOKENS: int = 2048
+    MAX_TOKENS: int = 750
 
     # Celery
     CELERY_BROKER_URL: str = "memory://"

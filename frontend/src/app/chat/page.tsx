@@ -20,12 +20,11 @@ function FormattedChatContent({ content }: { content: string }) {
 
   // Helper to parse bold **text** and links [title](url) or raw URLs
   const renderInline = (text: string) => {
-    // Regex for bold **...** and markdown links [text](url)
     const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s)]+)/g);
     return parts.map((part, idx) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         return (
-          <strong key={idx} className="font-bold text-primary dark:text-inverse-primary">
+          <strong key={idx} className="font-semibold text-slate-950 dark:text-white">
             {part.slice(2, -2)}
           </strong>
         );
@@ -38,7 +37,7 @@ function FormattedChatContent({ content }: { content: string }) {
             href={linkMatch[2]}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-secondary font-semibold hover:underline bg-secondary-container/40 px-1.5 py-0.5 rounded text-xs mx-0.5"
+            className="inline-flex items-center gap-1 text-emerald-800 font-semibold hover:underline bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded text-xs mx-0.5 transition-colors"
           >
             <span>{linkMatch[1]}</span>
             <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -52,7 +51,7 @@ function FormattedChatContent({ content }: { content: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-secondary font-semibold hover:underline bg-secondary-container/40 px-1.5 py-0.5 rounded text-xs mx-0.5 break-all"
+            className="inline-flex items-center gap-1 text-emerald-800 font-semibold hover:underline bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded text-xs mx-0.5 break-all transition-colors"
           >
             <span>{part.replace(/^https?:\/\/(www\.)?/, "")}</span>
             <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -67,7 +66,7 @@ function FormattedChatContent({ content }: { content: string }) {
 
   return (
     <div
-      className={`space-y-2 text-sm leading-relaxed ${isArabic ? "text-right" : "text-left"}`}
+      className={`space-y-2.5 text-[15px] leading-relaxed text-slate-800 ${isArabic ? "text-right" : "text-left"}`}
       dir={isArabic ? "rtl" : "ltr"}
       style={{ unicodeBidi: "embed" }}
     >
@@ -80,8 +79,9 @@ function FormattedChatContent({ content }: { content: string }) {
         // Heading ###
         if (trimmed.startsWith("### ")) {
           return (
-            <h4 key={i} className="font-bold text-base text-primary mt-2 mb-1">
-              {renderInline(trimmed.replace(/^###\s+/, ""))}
+            <h4 key={i} className="font-bold text-[15px] text-slate-900 mt-3 mb-1.5 pb-1 border-b border-slate-100 flex items-center gap-1.5">
+              <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full inline-block"></span>
+              <span>{renderInline(trimmed.replace(/^###\s+/, ""))}</span>
             </h4>
           );
         }
@@ -89,29 +89,29 @@ function FormattedChatContent({ content }: { content: string }) {
         // Bullet point (•, -, *)
         if (/^[•\-*]\s+/.test(trimmed)) {
           return (
-            <div key={i} className={`flex items-start gap-2 ${isArabic ? "mr-1" : "ml-1"}`}>
-              <span className="text-secondary font-bold text-sm shrink-0 mt-0.5">•</span>
-              <span className="flex-1">{renderInline(trimmed.replace(/^[•\-*]\s+/, ""))}</span>
+            <div key={i} className={`flex items-start gap-2.5 my-1.5 ${isArabic ? "mr-1" : "ml-1"}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 mt-2 shadow-2xs"></span>
+              <span className="flex-1 leading-relaxed text-slate-800 font-normal">{renderInline(trimmed.replace(/^[•\-*]\s+/, ""))}</span>
             </div>
           );
         }
 
         // Numbered list (1., 2., etc.)
-        const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+        const numMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
         if (numMatch) {
           return (
-            <div key={i} className={`flex items-start gap-2.5 my-1 ${isArabic ? "mr-1" : "ml-1"}`}>
-              <span className="w-5 h-5 rounded-full bg-primary-container text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+            <div key={i} className={`flex items-start gap-2.5 my-2 ${isArabic ? "mr-1" : "ml-1"}`}>
+              <span className="w-5 h-5 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                 {numMatch[1]}
               </span>
-              <span className="flex-1 leading-snug">{renderInline(numMatch[2])}</span>
+              <span className="flex-1 leading-relaxed text-slate-800 font-normal">{renderInline(numMatch[2])}</span>
             </div>
           );
         }
 
         // Standard paragraph
         return (
-          <p key={i} className="leading-relaxed">
+          <p key={i} className="leading-relaxed text-slate-800 font-normal">
             {renderInline(trimmed)}
           </p>
         );
@@ -214,6 +214,7 @@ export default function ChatPortal() {
         agent_name: res.agent_response.agent_name,
         content: res.agent_response.content,
         confidence: res.agent_response.confidence,
+        citations: res.agent_response.citations,
         timestamp: res.timestamp,
       };
 
@@ -528,18 +529,27 @@ export default function ChatPortal() {
               const isCitizen = msg.role === "citizen";
               const timeString = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               
-              // Detect if agent message content is Arabic to flip bubble alignment
-              const isAgentArabic = !isCitizen && /[\u0600-\u06FF]/.test(msg.content);
+              // Detect if agent message content is Arabic to flip bubble alignment (using ratio check)
+              const arabicLetters = (msg.content.match(/[\u0600-\u06FF]/g) || []).length;
+              const totalLetters = (msg.content.match(/[a-zA-Z\u0600-\u06FF]/g) || []).length;
+              const isAgentArabic = !isCitizen && totalLetters > 0 && (arabicLetters / totalLetters) > 0.25;
 
               let badgeText = msg.agent_name || "Agent";
-              let badgeStyle = "bg-surface-variant text-on-surface-variant border border-outline/20";
+              let badgeStyle = "bg-slate-100 text-slate-700 border border-slate-200";
+              let badgeIcon = "smart_toy";
               
               if (msg.agent_name === "Policy Agent") {
-                badgeStyle = "bg-secondary-container text-on-secondary-container border border-secondary/20";
+                badgeStyle = "bg-emerald-50 text-emerald-800 border border-emerald-200/90";
+                badgeIcon = "account_balance";
               } else if (msg.agent_name === "Verification Agent") {
-                badgeStyle = "bg-primary-container text-on-primary-container border border-primary/20";
+                badgeStyle = "bg-blue-50 text-blue-800 border border-blue-200/90";
+                badgeIcon = "verified";
               } else if (msg.agent_name === "Escalation Agent") {
-                badgeStyle = "bg-orange-100 text-orange-800 border border-orange-200";
+                badgeStyle = "bg-amber-50 text-amber-900 border border-amber-200/90";
+                badgeIcon = "priority_high";
+              } else if (msg.agent_name === "General Agent") {
+                badgeStyle = "bg-purple-50 text-purple-800 border border-purple-200/90";
+                badgeIcon = "forum";
               }
               
               return (
@@ -551,35 +561,61 @@ export default function ChatPortal() {
                       : isAgentArabic
                       ? "items-end mr-auto"  /* Arabic agent: bubble on the right, text RTL */
                       : "items-start"         /* English agent: bubble on the left, text LTR */
-                  } max-w-[80%]`}
+                  } max-w-[85%] md:max-w-[78%]`}
                 >
-                  <div className={`flex items-center gap-2 mb-2 ${isAgentArabic ? "flex-row-reverse" : ""}`}>
+                  <div className={`flex items-center gap-2 mb-1.5 ${isAgentArabic ? "flex-row-reverse" : ""}`}>
                     {!isCitizen && (
                       <span
-                        className={`px-2 py-0.5 rounded font-label-sm text-[10px] uppercase font-bold tracking-tight ${badgeStyle}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm text-[11px] font-bold tracking-tight shadow-2xs ${badgeStyle}`}
                       >
-                        {badgeText}
+                        <span className="material-symbols-outlined text-[13px]">{badgeIcon}</span>
+                        <span>{badgeText}</span>
                       </span>
                     )}
-                    <span className="text-on-surface-variant font-label-sm text-label-sm">
+                    <span className="text-on-surface-variant font-label-sm text-[11px]">
                       {isCitizen ? "You" : badgeText} • {timeString}
                     </span>
                   </div>
                   <div
-                    className={`p-4 ${
+                    className={`p-4 sm:p-5 shadow-xs transition-shadow ${
                       isCitizen
-                        ? "bg-primary text-white rounded-xl rounded-tr-none"
+                        ? "bg-slate-900 text-white rounded-2xl rounded-tr-xs shadow-sm"
                         : isAgentArabic
-                        ? "bg-white border border-outline-variant text-on-surface rounded-xl rounded-tr-none shadow-sm"  /* Arabic: no top-right corner */
-                        : "bg-white border border-outline-variant text-on-surface rounded-xl rounded-tl-none shadow-sm"  /* English: no top-left corner */
+                        ? "bg-white border border-slate-200/90 text-slate-900 rounded-2xl rounded-tr-xs shadow-xs"  /* Arabic: no top-right corner */
+                        : "bg-white border border-slate-200/90 text-slate-900 rounded-2xl rounded-tl-xs shadow-xs"  /* English: no top-left corner */
                     }`}
                   >
                     {isCitizen ? (
-                      <p className="font-body-md text-body-md whitespace-pre-line">
+                      <p className="font-body-md text-body-md whitespace-pre-line text-white">
                         {msg.content}
                       </p>
                     ) : (
-                      <FormattedChatContent content={msg.content} />
+                      <>
+                        <FormattedChatContent content={msg.content} />
+                        {msg.citations && msg.citations.length > 0 && (
+                          <div className={`mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-xs ${isAgentArabic ? "justify-end" : "justify-start"}`}>
+                            <span className="text-slate-500 font-medium flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+                              <span>{isAgentArabic ? "البوابات الرسمية:" : "Official Portals:"}</span>
+                            </span>
+                            {msg.citations.map((cite, cIdx) => {
+                              const domain = cite.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+                              return (
+                                <a
+                                  key={cIdx}
+                                  href={cite}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-800 font-medium transition-colors"
+                                >
+                                  <span>{domain}</span>
+                                  <span className="material-symbols-outlined text-[10px]">open_in_new</span>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

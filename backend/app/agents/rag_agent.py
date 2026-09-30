@@ -20,32 +20,10 @@ def rag_agent(state: dict) -> dict:
         language=state.get("language", "en"),
     )
 
-    if not retrieved:
-        no_result_msg = (
-            "لم أتمكن من العثور على معلومات ذات صلة في قاعدة بياناتنا. يرجى المحاولة مرة أخرى أو التواصل مع الدعم."
-            if state.get("language") == "ar"
-            else "I could not find relevant information in our database. Please try rephrasing your question or contact support."
-        )
-        latency_ms = int((time.time() - start) * 1000)
-        log_agent_action(
-            request_id=state["request_id"],
-            agent_name="Policy Agent",
-            input_data={"query": state["citizen_message"]},
-            output_data={"response": no_result_msg, "chunks_found": 0},
-            confidence=0.0,
-            latency_ms=latency_ms,
-            client=client,
-        )
-        return {
-            **state,
-            "retrieved_docs": [],
-            "final_response": no_result_msg,
-            "confidence": 0.2,
-        }
-
+    # If similarity search has no specific matches, fall back to authoritative knowledge base
     system_prompt, user_message = build_rag_prompt(
         query=state["citizen_message"],
-        retrieved_chunks=retrieved,
+        retrieved_chunks=retrieved or [],
         language=state.get("language", "en"),
     )
 
