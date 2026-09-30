@@ -42,11 +42,13 @@ def _classify_intent(message: str, request_id: str, client) -> dict:
         "- language: detected language code ('ar', 'en', 'ur', etc.)\n"
         "- confidence: float between 0.0 and 1.0\n\n"
         "Classification Guidelines:\n"
-        "- 'policy_question': Inquiries about Iqama, Absher, Qiwa, Muqeem, ZATCA, Visas, Labor Laws, "
-        "Sponsorship transfer (نقل الكفالة), fees, renewals, GOSI, passports, legal procedures, etc.\n"
+        "- 'policy_question': Inquiries about Saudi policies, Vision 2030, AI, "
+        "business opportunities, investments, MISA, SDAIA, Absher, Qiwa, Muqeem, ZATCA, Visas, "
+        "Labor Laws, Sponsorship transfer (نقل الكفالة), fees, renewals, GOSI, passports, legal procedures, etc. "
+        "Any inquiry asking about facts, guidelines, opportunities, or procedures MUST be 'policy_question'.\n"
         "- 'document_verification': Requests to verify, check, scan, or inspect an ID, Iqama, Commercial Registration, or license.\n"
         "- 'complaint': Expressing frustration, dispute, delayed government transactions, harassment, or reporting fraud.\n"
-        "- 'general': Greetings (e.g. 'Hello', 'السلام عليكم', 'مرحبا'), thanking, asking what this portal does.\n"
+        "- 'general': ONLY pure greetings (e.g. 'Hello', 'السلام عليكم', 'مرحبا') or thanking. If the user asks ANY question, it is NOT general.\n"
         "Be typo-tolerant. Return valid JSON only."
     )
     
@@ -361,7 +363,7 @@ async def run_agent_pipeline(
         agent_name = "Verification Agent"
     elif intent == "general":
         result = _general_respond(citizen_message, effective_lang)
-        agent_name = "GovAssist Advisor"
+        agent_name = "General Agent"
     else:
         # Default: Policy Agent (RAG + Comprehensive Saudi regulations knowledge)
         result = _rag_agent(citizen_message, effective_lang, request_id, client)

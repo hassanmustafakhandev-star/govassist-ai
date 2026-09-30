@@ -24,7 +24,7 @@ function FormattedChatContent({ content }: { content: string }) {
     return parts.map((part, idx) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         return (
-          <strong key={idx} className="font-semibold text-slate-950 dark:text-white">
+          <strong key={idx} className="font-semibold text-emerald-300">
             {part.slice(2, -2)}
           </strong>
         );
@@ -37,7 +37,7 @@ function FormattedChatContent({ content }: { content: string }) {
             href={linkMatch[2]}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-emerald-800 font-semibold hover:underline bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded text-xs mx-0.5 transition-colors"
+            className="inline-flex items-center gap-1 text-emerald-300 font-medium hover:underline bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded text-xs mx-0.5 transition-colors"
           >
             <span>{linkMatch[1]}</span>
             <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -51,7 +51,7 @@ function FormattedChatContent({ content }: { content: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-emerald-800 font-semibold hover:underline bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded text-xs mx-0.5 break-all transition-colors"
+            className="inline-flex items-center gap-1 text-emerald-300 font-medium hover:underline bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded text-xs mx-0.5 break-all transition-colors"
           >
             <span>{part.replace(/^https?:\/\/(www\.)?/, "")}</span>
             <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -66,7 +66,7 @@ function FormattedChatContent({ content }: { content: string }) {
 
   return (
     <div
-      className={`space-y-2.5 text-[15px] leading-relaxed text-slate-800 ${isArabic ? "text-right" : "text-left"}`}
+      className={`space-y-2.5 text-[15px] leading-relaxed text-slate-200 ${isArabic ? "text-right" : "text-left"}`}
       dir={isArabic ? "rtl" : "ltr"}
       style={{ unicodeBidi: "embed" }}
     >
@@ -79,8 +79,8 @@ function FormattedChatContent({ content }: { content: string }) {
         // Heading ###
         if (trimmed.startsWith("### ")) {
           return (
-            <h4 key={i} className="font-bold text-[15px] text-slate-900 mt-3 mb-1.5 pb-1 border-b border-slate-100 flex items-center gap-1.5">
-              <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full inline-block"></span>
+            <h4 key={i} className="font-bold text-[16px] text-white mt-3.5 mb-1.5 pb-1 border-b border-slate-800 flex items-center gap-2">
+              <span className="w-1.5 h-4 bg-emerald-400 rounded-full inline-block shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
               <span>{renderInline(trimmed.replace(/^###\s+/, ""))}</span>
             </h4>
           );
@@ -90,8 +90,8 @@ function FormattedChatContent({ content }: { content: string }) {
         if (/^[•\-*]\s+/.test(trimmed)) {
           return (
             <div key={i} className={`flex items-start gap-2.5 my-1.5 ${isArabic ? "mr-1" : "ml-1"}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 mt-2 shadow-2xs"></span>
-              <span className="flex-1 leading-relaxed text-slate-800 font-normal">{renderInline(trimmed.replace(/^[•\-*]\s+/, ""))}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 mt-2 shadow-[0_0_8px_rgba(52,211,153,0.7)]"></span>
+              <span className="flex-1 leading-relaxed text-slate-200 font-normal">{renderInline(trimmed.replace(/^[•\-*]\s+/, ""))}</span>
             </div>
           );
         }
@@ -100,18 +100,18 @@ function FormattedChatContent({ content }: { content: string }) {
         const numMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
         if (numMatch) {
           return (
-            <div key={i} className={`flex items-start gap-2.5 my-2 ${isArabic ? "mr-1" : "ml-1"}`}>
-              <span className="w-5 h-5 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+            <div key={i} className={`flex items-start gap-3 my-2 ${isArabic ? "mr-1" : "ml-1"}`}>
+              <span className="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-emerald-500/20">
                 {numMatch[1]}
               </span>
-              <span className="flex-1 leading-relaxed text-slate-800 font-normal">{renderInline(numMatch[2])}</span>
+              <span className="flex-1 leading-relaxed text-slate-200 font-normal">{renderInline(numMatch[2])}</span>
             </div>
           );
         }
 
         // Standard paragraph
         return (
-          <p key={i} className="leading-relaxed text-slate-800 font-normal">
+          <p key={i} className="leading-relaxed text-slate-200 font-normal">
             {renderInline(trimmed)}
           </p>
         );
@@ -317,50 +317,51 @@ export default function ChatPortal() {
   }
 
   return (
-    <div className="bg-surface text-on-surface flex flex-col h-screen overflow-hidden font-body-md selection:bg-secondary-container selection:text-on-secondary-container">
+    <div className="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden font-body-md selection:bg-emerald-500 selection:text-slate-950">
       {/* TopNavBar */}
-      <header className="bg-surface dark:bg-surface-container-low border-b border-outline-variant dark:border-outline w-full top-0 z-50 shrink-0">
-        <nav className="flex justify-between items-center px-margin-desktop h-16 w-full">
-          <div className="flex items-center gap-stack-lg">
-            <Link href="/" className="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary hover:opacity-80 transition-opacity">
-              GovAssist AI
+      <header className="bg-slate-900 border-b border-slate-800 w-full top-0 z-50 shrink-0">
+        <nav className="flex justify-between items-center px-4 sm:px-8 h-16 w-full">
+          <div className="flex items-center gap-6 sm:gap-8">
+            <Link href="/" className="font-bold text-white hover:text-emerald-400 transition-colors flex items-center gap-2 text-lg sm:text-xl">
+              <span className="material-symbols-outlined text-emerald-400 text-2xl">account_balance</span>
+              <span>GovAssist AI</span>
             </Link>
-            <div className="hidden md:flex gap-stack-md">
+            <div className="hidden md:flex gap-6">
               <Link
-                className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors"
+                className="font-medium text-slate-300 hover:text-emerald-400 transition-colors text-sm"
                 href="/admin"
               >
                 Dashboard
               </Link>
               <Link
-                className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors"
+                className="font-medium text-slate-300 hover:text-emerald-400 transition-colors text-sm"
                 href="/services"
               >
                 Services
               </Link>
               <Link
-                className="font-body-md text-body-md text-primary dark:text-inverse-primary border-b-2 border-primary dark:border-inverse-primary pb-1"
+                className="font-semibold text-emerald-400 border-b-2 border-emerald-400 pb-1 text-sm"
                 href="/chat"
               >
                 Inquiry
               </Link>
             </div>
           </div>
-          <div className="flex items-center gap-stack-md">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="font-label-md text-label-md text-primary font-bold cursor-pointer hover:opacity-80"
+              className="text-emerald-400 border border-slate-700 bg-slate-800/80 hover:bg-slate-800 font-semibold text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
             >
               {lang === "en" ? "EN/AR" : "AR/EN"}
             </button>
-            <button className="text-on-surface-variant cursor-pointer hover:text-primary active:opacity-85">
+            <button className="text-slate-400 cursor-pointer hover:text-emerald-400 transition-colors">
               <span className="material-symbols-outlined">notifications</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="hidden sm:inline-block text-xs bg-surface-container-high px-2.5 py-1 rounded-full text-on-surface-variant font-medium">
+              <span className="hidden sm:inline-block text-xs bg-slate-800 border border-slate-700 px-3 py-1 rounded-full text-slate-300 font-medium">
                 {getUser()?.name || getUser()?.email || "citizen@govassist.ai"}
               </span>
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-surface-container flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center">
                 {getUser()?.avatar ? (
                   <img
                     className="w-full h-full object-cover"
@@ -368,7 +369,7 @@ export default function ChatPortal() {
                     src={getUser()?.avatar}
                   />
                 ) : (
-                  <span className="material-symbols-outlined text-[18px] text-primary">person</span>
+                  <span className="material-symbols-outlined text-[18px] text-emerald-400">person</span>
                 )}
               </div>
             </div>
@@ -378,117 +379,121 @@ export default function ChatPortal() {
 
       <main className="flex flex-1 overflow-hidden">
         {/* SideNavBar (Hidden on Mobile) */}
-        <aside className="hidden lg:flex flex-col h-full w-64 bg-surface-container-lowest dark:bg-surface-container-low border-e border-outline-variant dark:border-outline p-stack-md shrink-0">
-          <div className="mb-stack-lg">
-            <h2 className="font-label-md text-label-md text-primary uppercase tracking-wider mb-1">
+        <aside className="hidden lg:flex flex-col h-full w-64 bg-slate-900 border-r border-slate-800 p-4 shrink-0">
+          <div className="mb-6">
+            <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">
               {isAdmin() ? "Admin Portal" : "Citizen Portal"}
             </h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
+            <p className="text-xs text-slate-400">
               {isAdmin() ? "Government Administration" : "Saudi Government Services"}
             </p>
           </div>
-          <div className="flex flex-col gap-unit flex-1">
+          <div className="flex flex-col gap-1.5 flex-1">
             {isAdmin() ? (
               // Admin Links
               <>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all"
+                  className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium"
                   href="/admin"
                 >
-                  <span className="material-symbols-outlined">dashboard</span>
-                  <span className="font-label-md text-label-md">Overview</span>
+                  <span className="material-symbols-outlined text-lg">dashboard</span>
+                  <span>Overview</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all"
+                  className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium"
                   href="/agents"
                 >
-                  <span className="material-symbols-outlined">smart_toy</span>
-                  <span className="font-label-md text-label-md">AI Agents</span>
+                  <span className="material-symbols-outlined text-lg">smart_toy</span>
+                  <span>AI Agents</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg bg-primary-fixed dark:bg-primary-container text-on-primary-fixed dark:text-on-primary-container"
+                  className="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-semibold shadow-sm"
                   href="/chat"
                 >
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
                     chat
                   </span>
-                  <span className="font-label-md text-label-md">AI Assistant</span>
+                  <span>AI Assistant</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all"
+                  className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium"
                   href="/admin/logs"
                 >
-                  <span className="material-symbols-outlined">list_alt</span>
-                  <span className="font-label-md text-label-md">Activity Logs</span>
+                  <span className="material-symbols-outlined text-lg">list_alt</span>
+                  <span>Activity Logs</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all"
+                  className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium"
                   href="/settings"
                 >
-                  <span className="material-symbols-outlined">settings</span>
-                  <span className="font-label-md text-label-md">Settings</span>
+                  <span className="material-symbols-outlined text-lg">settings</span>
+                  <span>Settings</span>
                 </Link>
               </>
             ) : (
               // Citizen Links
               <>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg bg-primary-fixed dark:bg-primary-container text-on-primary-fixed dark:text-on-primary-container font-semibold"
+                  className="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-semibold shadow-sm"
                   href="/chat"
                 >
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
                     chat
                   </span>
-                  <span className="font-label-md text-label-md">AI Assistant</span>
+                  <span>AI Assistant</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all"
+                  className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium"
                   href="/services"
                 >
-                  <span className="material-symbols-outlined">grid_view</span>
-                  <span className="font-label-md text-label-md">Services Catalog</span>
+                  <span className="material-symbols-outlined text-lg">grid_view</span>
+                  <span>Services Catalog</span>
                 </Link>
                 <Link
-                  className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all"
+                  className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium"
                   href="/settings"
                 >
-                  <span className="material-symbols-outlined">settings</span>
-                  <span className="font-label-md text-label-md">Account Settings</span>
+                  <span className="material-symbols-outlined text-lg">settings</span>
+                  <span>Account Settings</span>
                 </Link>
               </>
             )}
           </div>
-          <div className="mt-auto pt-stack-md border-t border-outline-variant">
-            <Link className="flex items-center gap-stack-sm p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="/support">
-              <span className="material-symbols-outlined">help</span>
-              <span className="font-label-md text-label-md">Support</span>
+          <div className="mt-auto pt-4 border-t border-slate-800 flex flex-col gap-1">
+            <Link className="flex items-center gap-3 p-2.5 rounded-xl text-slate-400 hover:text-emerald-400 hover:bg-slate-800/70 transition-all text-sm font-medium" href="/support">
+              <span className="material-symbols-outlined text-lg">help</span>
+              <span>Support</span>
             </Link>
-            <Link onClick={() => logout()} className="flex items-center gap-stack-sm p-3 rounded-lg text-error hover:bg-error-container transition-all" href="/login">
-              <span className="material-symbols-outlined">logout</span>
-              <span className="font-label-md text-label-md">Logout</span>
+            <Link onClick={() => logout()} className="flex items-center gap-3 p-2.5 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition-all text-sm font-medium" href="/login">
+              <span className="material-symbols-outlined text-lg">logout</span>
+              <span>Logout</span>
             </Link>
           </div>
         </aside>
 
         {/* Chat Container */}
-        <section className="flex flex-col flex-1 relative bg-gradient-to-b from-slate-50 via-emerald-50/15 to-slate-100/90 overflow-hidden">
+        <section className="flex flex-col flex-1 relative bg-slate-950 overflow-hidden">
+          {/* Subtle background ambient glow */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-teal-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
           {/* Chat Header */}
-          <div className="px-4 sm:px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex justify-between items-center shrink-0 shadow-2xs z-10">
+          <div className="px-4 sm:px-6 py-3.5 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex justify-between items-center shrink-0 z-10">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white shadow-md shadow-emerald-950/20 shrink-0">
+              <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-950/40 shrink-0">
                 <span className="material-symbols-outlined text-2xl">account_balance</span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="font-bold text-slate-900 text-base sm:text-lg">
+                  <h1 className="font-bold text-slate-100 text-base sm:text-lg">
                     {lang === "ar" ? "المستشار الحكومي الذكي (رؤية 2030)" : "Saudi Public Services & Vision 2030 Advisor"}
                   </h1>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 text-[11px] font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Live
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-400">
                   {lang === "ar" 
                     ? "منظومة استشارية رسمية موحدة • منصة أبشر • قوى • مقيم • وزارة الاستثمار" 
                     : "Official Unified Advisory • Absher • Qiwa • Muqeem • MISA • ZATCA"}
@@ -506,13 +511,13 @@ export default function ChatPortal() {
                   a.download = `govassist-transcript-${Date.now()}.txt`;
                   a.click();
                 }}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:border-emerald-300 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50/50 text-xs font-semibold transition-all cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-700 hover:border-emerald-500 rounded-xl text-slate-300 hover:text-emerald-400 hover:bg-slate-800 text-xs font-semibold transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
                 <span>Export</span>
               </button>
               <button 
-                className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5" 
+                className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-1.5" 
                 onClick={() => {
                   const user = getUser();
                   if (user) {
@@ -539,12 +544,12 @@ export default function ChatPortal() {
           {/* Messages Area */}
           <div
             ref={chatWindowRef}
-            className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-5 chat-scrollbar"
+            className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-5 chat-scrollbar relative z-0"
             id="chat-window"
           >
             {/* Timestamp */}
             <div className="flex justify-center">
-              <span className="bg-surface-container-high px-3 py-1 rounded-full text-on-surface-variant font-label-sm text-label-sm uppercase tracking-widest">
+              <span className="bg-slate-900 border border-slate-800 text-slate-400 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-widest">
                 Today
               </span>
             </div>
@@ -559,20 +564,20 @@ export default function ChatPortal() {
               const isAgentArabic = !isCitizen && totalLetters > 0 && (arabicLetters / totalLetters) > 0.25;
 
               let badgeText = msg.agent_name || "Agent";
-              let badgeStyle = "bg-slate-100 text-slate-700 border border-slate-200";
+              let badgeStyle = "bg-slate-800 text-slate-300 border border-slate-700";
               let badgeIcon = "smart_toy";
               
               if (msg.agent_name === "Policy Agent") {
-                badgeStyle = "bg-emerald-50 text-emerald-800 border border-emerald-200/90";
+                badgeStyle = "bg-emerald-950/80 text-emerald-300 border border-emerald-700/60";
                 badgeIcon = "account_balance";
               } else if (msg.agent_name === "Verification Agent") {
-                badgeStyle = "bg-blue-50 text-blue-800 border border-blue-200/90";
+                badgeStyle = "bg-blue-950/80 text-blue-300 border border-blue-700/60";
                 badgeIcon = "verified";
               } else if (msg.agent_name === "Escalation Agent") {
-                badgeStyle = "bg-amber-50 text-amber-900 border border-amber-200/90";
+                badgeStyle = "bg-amber-950/80 text-amber-300 border border-amber-700/60";
                 badgeIcon = "priority_high";
               } else if (msg.agent_name === "General Agent") {
-                badgeStyle = "bg-purple-50 text-purple-800 border border-purple-200/90";
+                badgeStyle = "bg-purple-950/80 text-purple-300 border border-purple-700/60";
                 badgeIcon = "forum";
               }
               
@@ -585,41 +590,41 @@ export default function ChatPortal() {
                       : isAgentArabic
                       ? "items-end mr-auto"  /* Arabic agent: bubble on the right, text RTL */
                       : "items-start"         /* English agent: bubble on the left, text LTR */
-                  } max-w-[85%] md:max-w-[78%]`}
+                  } max-w-[88%] md:max-w-[80%]`}
                 >
                   <div className={`flex items-center gap-2 mb-1.5 ${isAgentArabic ? "flex-row-reverse" : ""}`}>
                     {!isCitizen && (
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm text-[11px] font-bold tracking-tight shadow-2xs ${badgeStyle}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-tight shadow-xs ${badgeStyle}`}
                       >
                         <span className="material-symbols-outlined text-[13px]">{badgeIcon}</span>
                         <span>{badgeText}</span>
                       </span>
                     )}
-                    <span className="text-on-surface-variant font-label-sm text-[11px]">
+                    <span className="text-slate-400 text-[11px]">
                       {isCitizen ? "You" : badgeText} • {timeString}
                     </span>
                   </div>
                   <div
-                    className={`p-4 sm:p-5 shadow-xs transition-shadow ${
+                    className={`p-4 sm:p-5 transition-shadow ${
                       isCitizen
-                        ? "bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 text-white rounded-2xl rounded-tr-xs shadow-md border border-emerald-700/40"
+                        ? "bg-gradient-to-r from-emerald-600 via-teal-700 to-emerald-700 text-white rounded-2xl rounded-tr-xs shadow-lg border border-emerald-500/30"
                         : isAgentArabic
-                        ? "bg-white border border-slate-200/90 text-slate-900 rounded-2xl rounded-tr-xs shadow-xs"  /* Arabic: no top-right corner */
-                        : "bg-white border border-slate-200/90 text-slate-900 rounded-2xl rounded-tl-xs shadow-xs"  /* English: no top-left corner */
+                        ? "bg-slate-900/95 border border-slate-800 text-slate-100 rounded-2xl rounded-tr-xs shadow-md"
+                        : "bg-slate-900/95 border border-slate-800 text-slate-100 rounded-2xl rounded-tl-xs shadow-md"
                     }`}
                   >
                     {isCitizen ? (
-                      <p className="font-body-md text-body-md whitespace-pre-line text-white">
+                      <p className="text-sm sm:text-base whitespace-pre-line text-white leading-relaxed font-normal">
                         {msg.content}
                       </p>
                     ) : (
                       <>
                         <FormattedChatContent content={msg.content} />
                         {msg.citations && msg.citations.length > 0 && (
-                          <div className={`mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-xs ${isAgentArabic ? "justify-end" : "justify-start"}`}>
-                            <span className="text-slate-500 font-medium flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+                          <div className={`mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center gap-1.5 text-xs ${isAgentArabic ? "justify-end" : "justify-start"}`}>
+                            <span className="text-slate-400 font-medium flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px] text-emerald-400">verified</span>
                               <span>{isAgentArabic ? "البوابات الرسمية:" : "Official Portals:"}</span>
                             </span>
                             {msg.citations.map((cite, cIdx) => {
@@ -630,7 +635,7 @@ export default function ChatPortal() {
                                   href={cite}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-800 font-medium transition-colors"
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800/80 hover:bg-emerald-950/60 border border-slate-700 hover:border-emerald-600 text-slate-300 hover:text-emerald-300 font-medium transition-colors"
                                 >
                                   <span>{domain}</span>
                                   <span className="material-symbols-outlined text-[10px]">open_in_new</span>
@@ -648,8 +653,8 @@ export default function ChatPortal() {
             
             {isUploading && (
               <div className="flex justify-center py-2">
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-emerald-200 text-emerald-800 font-body-sm shadow-sm">
-                  <span className="material-symbols-outlined text-sm animate-spin text-emerald-600">
+                <div className="flex items-center gap-2 px-4 py-2 bg-slate-900 rounded-xl border border-emerald-700/60 text-emerald-300 text-xs shadow-sm">
+                  <span className="material-symbols-outlined text-sm animate-spin text-emerald-400">
                     sync
                   </span>
                   Processing document verification...
@@ -659,21 +664,21 @@ export default function ChatPortal() {
 
             {isLoading && (
               <div className="flex items-start gap-2 max-w-[80%]">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-emerald-950/80 border border-emerald-700/60 text-emerald-400 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-base animate-pulse">smart_toy</span>
                 </div>
-                <div className="p-3.5 bg-white border border-slate-200/90 rounded-2xl rounded-tl-xs shadow-xs flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "300ms" }}></span>
-                  <span className="text-xs text-slate-500 font-medium ml-1">Analyzing official regulations...</span>
+                <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-xs shadow-md flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                  <span className="text-xs text-slate-400 font-medium ml-1">Analyzing official regulations...</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Chat Input */}
-          <div className="p-3 sm:p-5 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shrink-0">
+          <div className="p-3 sm:p-5 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shrink-0">
             <div className="max-w-4xl mx-auto flex items-end gap-2 sm:gap-3">
               <input 
                 type="file" 
@@ -683,7 +688,7 @@ export default function ChatPortal() {
                 onChange={handleFileUpload} 
               />
               <button 
-                className="p-3 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all shrink-0 cursor-pointer active:scale-95"
+                className="p-3 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-xl transition-all shrink-0 cursor-pointer active:scale-95"
                 onClick={() => fileInputRef.current?.click()}
                 title="Attach ID or document for verification"
               >
@@ -691,7 +696,7 @@ export default function ChatPortal() {
               </button>
               <div className="relative flex-1">
                 <textarea
-                  className="w-full py-3 px-4 pr-12 rounded-2xl border border-slate-300/80 bg-slate-50/70 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none font-sans text-sm text-slate-800 placeholder:text-slate-400 leading-relaxed shadow-2xs"
+                  className="w-full py-3 px-4 pr-12 rounded-2xl border border-slate-700 bg-slate-950/80 focus:bg-slate-950 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none font-sans text-sm text-slate-100 placeholder:text-slate-500 leading-relaxed shadow-sm"
                   id="chat-input"
                   placeholder={lang === "ar" ? "اسأل عن الإقامة، منصة قوى، أبشر، أو فرص الذكاء الاصطناعي لعام 2026..." : "Ask about Iqama, Qiwa, Absher, or 2026 AI business opportunities in Saudi Arabia..."}
                   rows={1}
@@ -706,8 +711,8 @@ export default function ChatPortal() {
                 disabled={!inputText.trim() || isLoading}
                 className={`p-3 rounded-xl transition-all flex items-center justify-center shrink-0 cursor-pointer ${
                   inputText.trim() && !isLoading
-                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md shadow-emerald-950/20 active:scale-95"
-                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-md shadow-emerald-950/40 active:scale-95"
+                    : "bg-slate-800 text-slate-600 cursor-not-allowed"
                 }`}
               >
                 <span
@@ -720,13 +725,13 @@ export default function ChatPortal() {
             </div>
             <div className="max-w-4xl mx-auto mt-2 flex justify-between items-center px-2">
               <div className="flex gap-2">
-                <button className="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer active:opacity-85">
+                <button className="px-2 py-1 rounded bg-slate-800 text-slate-300 text-[11px] font-medium border border-slate-700 hover:bg-slate-750 transition-colors cursor-pointer active:opacity-85">
                   Request Callback
                 </button>
               </div>
-              <span className="text-on-surface-variant text-[11px]">
+              <span className="text-slate-500 text-[11px]">
                 System Status:{" "}
-                <span className="text-secondary font-bold">Encrypted</span>
+                <span className="text-emerald-400 font-semibold">256-bit Encrypted</span>
               </span>
             </div>
           </div>
@@ -734,14 +739,14 @@ export default function ChatPortal() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface-container dark:bg-surface-container-high border-t border-outline-variant dark:border-outline w-full py-2 z-50 shrink-0">
+      <footer className="bg-slate-950 border-t border-slate-800 w-full py-2 z-50 shrink-0">
         <div className="flex flex-row justify-between items-center px-margin-desktop h-8">
-          <span className="font-label-md text-label-md font-bold text-on-surface-variant">
+          <span className="text-xs font-medium text-slate-400">
             © 2026 GovAssist AI. All rights reserved.
           </span>
-          <div className="flex gap-stack-md">
-            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:underline" href="/legal">Privacy Policy</Link>
-            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:underline" href="/legal">Terms</Link>
+          <div className="flex gap-4">
+            <Link className="text-xs text-slate-400 hover:text-emerald-400 hover:underline" href="/legal">Privacy Policy</Link>
+            <Link className="text-xs text-slate-400 hover:text-emerald-400 hover:underline" href="/legal">Terms</Link>
           </div>
         </div>
       </footer>

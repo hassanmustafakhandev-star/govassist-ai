@@ -12,12 +12,7 @@ class ChatRequest(BaseModel):
 
 
 class AgentResponse(BaseModel):
-    agent_name: Literal[
-        "Policy Agent",
-        "Verification Agent",
-        "Escalation Agent",
-        "General Agent"
-    ]
+    agent_name: str = "Policy Agent"
     content: str
     confidence: float = Field(..., ge=0.0, le=1.0)
     citations: Optional[list[str]] = None
