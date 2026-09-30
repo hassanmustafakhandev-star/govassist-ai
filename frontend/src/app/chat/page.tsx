@@ -471,43 +471,67 @@ export default function ChatPortal() {
         </aside>
 
         {/* Chat Container */}
-        <section className="flex flex-col flex-1 relative bg-surface overflow-hidden">
+        <section className="flex flex-col flex-1 relative bg-gradient-to-b from-slate-50 via-emerald-50/15 to-slate-100/90 overflow-hidden">
           {/* Chat Header */}
-          <div className="px-margin-desktop py-stack-md bg-surface border-b border-outline-variant flex justify-between items-center shrink-0">
-            <div className="flex items-center gap-stack-md">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
-                <span className="material-symbols-outlined">support_agent</span>
+          <div className="px-4 sm:px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex justify-between items-center shrink-0 shadow-2xs z-10">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-white shadow-md shadow-emerald-950/20 shrink-0">
+                <span className="material-symbols-outlined text-2xl">account_balance</span>
               </div>
               <div>
-                <h1 className="font-headline-md text-headline-md text-primary">
-                  {lang === "ar" ? "استفسار التحقق" : "Verification Inquiry"} {requestId ? `#${requestId.substring(0, 8)}` : ""}
-                </h1>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Active • Priority Assistance
+                <div className="flex items-center gap-2">
+                  <h1 className="font-bold text-slate-900 text-base sm:text-lg">
+                    {lang === "ar" ? "المستشار الحكومي الذكي (رؤية 2030)" : "Saudi Public Services & Vision 2030 Advisor"}
+                  </h1>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {lang === "ar" 
+                    ? "منظومة استشارية رسمية موحدة • منصة أبشر • قوى • مقيم • وزارة الاستثمار" 
+                    : "Official Unified Advisory • Absher • Qiwa • Muqeem • MISA • ZATCA"}
                 </p>
               </div>
             </div>
-            <div className="flex gap-stack-sm">
-              <button className="px-4 py-2 border border-outline rounded text-primary font-label-md hover:bg-surface-container transition-colors cursor-pointer active:opacity-80">
-                Export Transcript
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => {
+                  const text = messages.map(m => `${m.role === 'citizen' ? 'Citizen' : m.agent_name || 'Agent'}: ${m.content}`).join('\n\n');
+                  const blob = new Blob([text], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `govassist-transcript-${Date.now()}.txt`;
+                  a.click();
+                }}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:border-emerald-300 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50/50 text-xs font-semibold transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">download</span>
+                <span>Export</span>
               </button>
-              <button className="px-4 py-2 bg-primary text-white rounded font-label-md hover:opacity-90 transition-opacity cursor-pointer active:opacity-80" onClick={() => {
-                const user = getUser();
-                if (user) {
-                  localStorage.removeItem(`govassist_request_id_${user.email}`);
-                }
-                setRequestId(null);
-                setMessages([
-                  {
-                    id: Date.now().toString(),
-                    role: "agent",
-                    agent_name: "GovAssist AI",
-                    content: lang === "ar" ? "تم إغلاق القضية. كيف يمكنني مساعدتك في استفسار جديد؟" : "Case closed. How can I help you with a new inquiry?",
-                    timestamp: new Date().toISOString(),
+              <button 
+                className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5" 
+                onClick={() => {
+                  const user = getUser();
+                  if (user) {
+                    localStorage.removeItem(`govassist_request_id_${user.email}`);
                   }
-                ]);
-              }}>
-                Close Case &amp; New Inquiry
+                  setRequestId(null);
+                  setMessages([
+                    {
+                      id: Date.now().toString(),
+                      role: "agent",
+                      agent_name: "GovAssist AI",
+                      content: lang === "ar" ? "أهلاً بك! تم بدء جلسة استشارية جديدة. كيف يمكنني خدمتك اليوم؟" : "Welcome! A new consultation session has started. How may I assist you today?",
+                      timestamp: new Date().toISOString(),
+                    }
+                  ]);
+                }}
+              >
+                <span className="material-symbols-outlined text-sm">refresh</span>
+                <span>{lang === "ar" ? "استفسار جديد" : "New Case"}</span>
               </button>
             </div>
           </div>
@@ -515,7 +539,7 @@ export default function ChatPortal() {
           {/* Messages Area */}
           <div
             ref={chatWindowRef}
-            className="flex-1 overflow-y-auto p-margin-desktop space-y-gutter chat-scrollbar bg-surface"
+            className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-5 chat-scrollbar"
             id="chat-window"
           >
             {/* Timestamp */}
@@ -579,7 +603,7 @@ export default function ChatPortal() {
                   <div
                     className={`p-4 sm:p-5 shadow-xs transition-shadow ${
                       isCitizen
-                        ? "bg-slate-900 text-white rounded-2xl rounded-tr-xs shadow-sm"
+                        ? "bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 text-white rounded-2xl rounded-tr-xs shadow-md border border-emerald-700/40"
                         : isAgentArabic
                         ? "bg-white border border-slate-200/90 text-slate-900 rounded-2xl rounded-tr-xs shadow-xs"  /* Arabic: no top-right corner */
                         : "bg-white border border-slate-200/90 text-slate-900 rounded-2xl rounded-tl-xs shadow-xs"  /* English: no top-left corner */
@@ -624,19 +648,33 @@ export default function ChatPortal() {
             
             {isUploading && (
               <div className="flex justify-center py-2">
-                <div className="flex items-center gap-2 px-4 py-2 bg-surface-container rounded border border-outline-variant text-on-surface-variant font-body-sm italic">
-                  <span className="material-symbols-outlined text-sm animate-spin">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-emerald-200 text-emerald-800 font-body-sm shadow-sm">
+                  <span className="material-symbols-outlined text-sm animate-spin text-emerald-600">
                     sync
                   </span>
-                  Processing document...
+                  Processing document verification...
+                </div>
+              </div>
+            )}
+
+            {isLoading && (
+              <div className="flex items-start gap-2 max-w-[80%]">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-base animate-pulse">smart_toy</span>
+                </div>
+                <div className="p-3.5 bg-white border border-slate-200/90 rounded-2xl rounded-tl-xs shadow-xs flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                  <span className="text-xs text-slate-500 font-medium ml-1">Analyzing official regulations...</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Chat Input */}
-          <div className="p-stack-lg bg-white border-t border-outline-variant shrink-0">
-            <div className="max-w-4xl mx-auto flex items-end gap-stack-sm">
+          <div className="p-3 sm:p-5 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shrink-0">
+            <div className="max-w-4xl mx-auto flex items-end gap-2 sm:gap-3">
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -645,26 +683,32 @@ export default function ChatPortal() {
                 onChange={handleFileUpload} 
               />
               <button 
-                className="p-3 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors shrink-0 cursor-pointer active:opacity-85"
+                className="p-3 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all shrink-0 cursor-pointer active:scale-95"
                 onClick={() => fileInputRef.current?.click()}
+                title="Attach ID or document for verification"
               >
-                <span className="material-symbols-outlined">attach_file</span>
+                <span className="material-symbols-outlined text-2xl">attach_file</span>
               </button>
               <div className="relative flex-1">
                 <textarea
-                  className="w-full p-3 pr-12 rounded-xl border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none chat-scrollbar font-body-md text-body-md bg-surface-container-lowest"
+                  className="w-full py-3 px-4 pr-12 rounded-2xl border border-slate-300/80 bg-slate-50/70 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none font-sans text-sm text-slate-800 placeholder:text-slate-400 leading-relaxed shadow-2xs"
                   id="chat-input"
-                  placeholder={lang === "ar" ? "اكتب استفسارك هنا..." : "Type your inquiry here..."}
+                  placeholder={lang === "ar" ? "اسأل عن الإقامة، منصة قوى، أبشر، أو فرص الذكاء الاصطناعي لعام 2026..." : "Ask about Iqama, Qiwa, Absher, or 2026 AI business opportunities in Saudi Arabia..."}
                   rows={1}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
                   style={{ maxHeight: "150px" }}
-                ></textarea>
+                />
               </div>
               <button
                 onClick={handleSendMessage}
-                className="bg-primary text-white p-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center shrink-0 cursor-pointer active:opacity-85"
+                disabled={!inputText.trim() || isLoading}
+                className={`p-3 rounded-xl transition-all flex items-center justify-center shrink-0 cursor-pointer ${
+                  inputText.trim() && !isLoading
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md shadow-emerald-950/20 active:scale-95"
+                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                }`}
               >
                 <span
                   className="material-symbols-outlined rtl-mirror"
@@ -676,7 +720,7 @@ export default function ChatPortal() {
             </div>
             <div className="max-w-4xl mx-auto mt-2 flex justify-between items-center px-2">
               <div className="flex gap-2">
-                <button className="px-2 py-1 rounded bg-surface-container text-on-surface-variant text-[11px] font-medium border border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-85">
+                <button className="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer active:opacity-85">
                   Request Callback
                 </button>
               </div>

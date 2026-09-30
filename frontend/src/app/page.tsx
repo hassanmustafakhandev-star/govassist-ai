@@ -178,78 +178,127 @@ export default function Home() {
       </nav>
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative min-h-[819px] flex items-center overflow-hidden bg-surface-container-lowest py-24">
-          <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-            {/* Abstract geometric background pattern */}
-            <div
-              className="absolute top-0 left-0 w-full h-full"
-              style={{
-                backgroundImage: "radial-gradient(#0c2340 1px, transparent 1px)",
-                backgroundSize: "40px 40px",
-              }}
-            ></div>
+        {/* Hero Section with Saudi Cityscape Real Background */}
+        <section className="relative min-h-[750px] lg:min-h-[820px] flex items-center overflow-hidden py-20 lg:py-28">
+          {/* Real Saudi Cityscape Photo Background */}
+          <div 
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transform scale-105 transition-transform duration-1000 ease-out"
+            style={{
+              backgroundImage: "url('/images/saudi_cityscape.jpg')",
+            }}
+          >
+            {/* Cinematic Gradient Overlays: Deep Slate, Royal Emerald & Twilight Vignette */}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-900/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/40" />
+            <div className="absolute inset-0 bg-emerald-950/20 mix-blend-overlay" />
           </div>
+
           <div className="container-max mx-auto px-margin-desktop relative z-10 w-full">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full mb-stack-md border border-secondary">
-                <span
-                  className="material-symbols-outlined text-[16px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  verified
-                </span>
-                <span className="font-label-sm text-label-sm uppercase tracking-wider">
-                  Official AI Ecosystem
-                </span>
-              </div>
-              <h1 className="font-headline-xl text-headline-xl text-primary mb-stack-md leading-tight">
-                AI-Powered Citizen Services for a{" "}
-                <span className="text-secondary">Modern Nation</span>
-              </h1>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mb-stack-lg max-w-2xl">
-                Streamline your government requests with our intelligent assistant
-                ecosystem. Experience rapid document processing and expert
-                regulatory guidance in one unified portal.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center gap-stack-md">
-                <Link href="/chat">
-                  <button className="bg-primary-container text-white px-8 py-3 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-primary transition-all shadow-sm cursor-pointer active:opacity-80">
-                    Start a request
-                    <span className="material-symbols-outlined">
-                      arrow_forward
-                    </span>
-                  </button>
-                </Link>
-                <Link href="/chat">
-                  <button className="text-primary px-8 py-3 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-surface-container-low border border-outline-variant transition-all cursor-pointer active:opacity-80">
-                    Explore Services
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-          {/* Hero Image/Asset - Abstract Representation of Digital Governance */}
-          <div className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 w-1/3 h-4/5 mr-margin-desktop">
-            <div className="w-full h-full relative">
-              <div className="absolute inset-0 bg-secondary rounded-full blur-[120px] opacity-10 animate-pulse"></div>
-              <div className="relative w-full h-full border border-outline-variant bg-white p-6 rounded-xl shadow-lg">
-                <div className="w-full h-full overflow-hidden rounded-lg bg-surface-container">
-                  <img
-                    className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700"
-                    alt="A sophisticated, high-tech interface representing government digital services. The image features clean data visualizations, holographic document icons, and abstract networking lines in a palette of deep navy, white, and emerald green. The lighting is soft and professional, reflecting a reliable and authoritative institutional environment. Minimalist architectural elements suggest a futuristic city or government center."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8I2myez663qFHZj6eR2XSm4RcUGb8OcMCgUpHCfsSJ6l-_oMcKfZQDHSgUraUgNui5DfBTX7w-YU9ScSQ9kux9--pvKI0j3ZJWHRw2tJtYrDDAEyhQHVouCf1T-WkqUUffPzTKaMiICSGAeh264YVR29wL-ZHeasaq6GoBWUNgn91YjTtz4aCyCewskISHIhCa0MI2fMw7SSKIli5brMCOEQTmwiRypDa3SoDcY4x7fvO7nfZgG8v1RvvB-gVPd7DxFeN5ET8Oe5v"
-                  />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              {/* Left Column: Headline and Call to Action */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-emerald-500/15 text-emerald-300 rounded-full border border-emerald-500/30 backdrop-blur-md shadow-lg shadow-emerald-950/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="font-label-sm text-xs font-semibold uppercase tracking-wider">
+                    Official Saudi Vision 2030 AI Advisor
+                  </span>
                 </div>
-                <div className="absolute -bottom-6 -left-6 bg-white p-4 border border-outline-variant rounded-lg shadow-md max-w-[200px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-2 h-2 bg-secondary rounded-full animate-ping"></span>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      Live Analysis
-                    </span>
+
+                <h1 className="font-headline-xl text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight">
+                  Intelligent Public Services for the{" "}
+                  <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-200 bg-clip-text text-transparent">
+                    Kingdom of Saudi Arabia
+                  </span>
+                </h1>
+
+                <p className="font-body-lg text-lg text-slate-200/90 max-w-2xl leading-relaxed font-normal">
+                  Empowering citizens, residents, and global enterprises with instant, authoritative guidance across Absher, Qiwa, MISA, and Vision 2030 digital transformations.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <Link href="/chat">
+                    <button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-3.5 rounded-xl font-label-md font-semibold flex items-center gap-2.5 shadow-lg shadow-emerald-900/40 hover:shadow-emerald-900/60 transition-all duration-200 cursor-pointer active:scale-98">
+                      <span>Start AI Consultation</span>
+                      <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                    </button>
+                  </Link>
+                  <Link href="/services">
+                    <button className="text-white hover:text-emerald-300 px-7 py-3.5 rounded-xl font-label-md font-semibold flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 backdrop-blur-md transition-all duration-200 cursor-pointer">
+                      <span>Explore Services</span>
+                      <span className="material-symbols-outlined text-lg">explore</span>
+                    </button>
+                  </Link>
+                </div>
+
+                {/* Trust Badges */}
+                <div className="pt-6 flex flex-wrap items-center gap-6 text-xs text-slate-300 border-t border-white/10">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-emerald-400 text-base">verified</span>
+                    <span>Absher & Qiwa Integrated</span>
                   </div>
-                  <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-secondary w-2/3"></div>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-emerald-400 text-base">shield</span>
+                    <span>Encrypted & Compliant</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-emerald-400 text-base">bolt</span>
+                    <span>Real-time Multi-Agent AI</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Glassmorphic Live Agent Card */}
+              <div className="hidden lg:block lg:col-span-5">
+                <div className="relative rounded-2xl p-1 bg-gradient-to-b from-white/20 via-emerald-500/20 to-transparent shadow-2xl backdrop-blur-xl">
+                  <div className="bg-slate-950/85 rounded-xl p-6 border border-white/10 text-white space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md">
+                          <span className="material-symbols-outlined">smart_toy</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-white">GovAssist AI System</p>
+                          <p className="text-xs text-emerald-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Multi-Agent Network Online
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-white/10 text-slate-300 text-[11px] font-mono">
+                        v2.4 Live
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 font-sans text-xs">
+                      <div className="p-3 rounded-lg bg-white/5 border border-white/5 flex items-start gap-2.5">
+                        <span className="material-symbols-outlined text-emerald-400 text-base shrink-0 mt-0.5">account_balance</span>
+                        <div>
+                          <span className="font-semibold text-slate-200">Policy & Vision 2030:</span>
+                          <p className="text-slate-400 mt-0.5">Instant guidance for Iqama, Absher, Qiwa & $100B AI investments.</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-lg bg-white/5 border border-white/5 flex items-start gap-2.5">
+                        <span className="material-symbols-outlined text-blue-400 text-base shrink-0 mt-0.5">verified</span>
+                        <div>
+                          <span className="font-semibold text-slate-200">Document Verification:</span>
+                          <p className="text-slate-400 mt-0.5">Automated OCR inspection of Iqama, National ID & CR licenses.</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-lg bg-white/5 border border-white/5 flex items-start gap-2.5">
+                        <span className="material-symbols-outlined text-amber-400 text-base shrink-0 mt-0.5">report_problem</span>
+                        <div>
+                          <span className="font-semibold text-slate-200">Complaint Escalation:</span>
+                          <p className="text-slate-400 mt-0.5">Automated ticket tracking and ministry dispute resolution.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-between items-center text-xs text-slate-400 border-t border-white/10">
+                      <span>Response Latency: ~0.4s</span>
+                      <span className="text-emerald-400 font-semibold">99.8% Accuracy</span>
+                    </div>
                   </div>
                 </div>
               </div>
