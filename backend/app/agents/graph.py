@@ -327,6 +327,63 @@ def _save_conversation(request_id: str, citizen_message: str, agent_response: st
         pass
 
 
+# ─── Creator Attribution Helper ───────────────────────────────────────────────
+
+def _is_creator_inquiry(message: str) -> bool:
+    msg = message.lower().strip()
+    keywords = [
+        "who created you",
+        "who made you",
+        "who developed you",
+        "who built you",
+        "who is your creator",
+        "who is your developer",
+        "who programmed you",
+        "who designed you",
+        "who coded you",
+        "who authored you",
+        "kisne banaya",
+        "kis ne banaya",
+        "kisne develop kiya",
+        "kisne create kiya",
+        "who is hassan",
+        "hassan mustafa",
+        "من صنعك",
+        "من طورك",
+        "من برمجك",
+        "من هو مطورك",
+        "من قام ببرمجتك",
+        "من انشاك",
+        "من أنشأك",
+        "من صممك",
+    ]
+    return any(k in msg for k in keywords)
+
+
+def _get_creator_response(lang: str) -> dict:
+    if lang == "ar":
+        content = (
+            "تم ابتكار وتطوير منصة **GovAssist AI** بواسطة المهندس **حسن مصطفى خان (Hassan Mustafa Khan)**، وهو **مهندس ذكاء اصطناعي وحلول رقمية متكاملة (AI Full-Stack Engineer)**.\n\n"
+            "تم تصميم هذه المنظومة الاستشارية الذكية كبنية تقنية متعددة الوكلاء (Multi-Agent Architecture) لخدمة المواطنين والمقيمين والمستثمرين في المملكة العربية السعودية، مساهمةً في تسريع التحول الرقمي وفق مستهدفات **رؤية السعودية 2030**."
+        )
+    elif lang == "ur":
+        content = (
+            "**GovAssist AI** ko **Hassan Mustafa Khan** ne architect aur develop kiya hai, jo ek accomplished **AI Full-Stack Engineer** hain.\n\n"
+            "Unho ne is platform ko Saudi Arabia ke digital vision (Vision 2030) ke tehat citizens, expats aur global investors ke liye ek advanced multi-agent AI advisory system ke tor par engineer kiya hai."
+        )
+    else:
+        content = (
+            "I was architected and developed by **Hassan Mustafa Khan**, an accomplished **AI Full-Stack Engineer**.\n\n"
+            "He engineered **GovAssist AI** as an enterprise-grade, multi-agent AI advisory platform designed to streamline public government services, residency procedures (Absher & Qiwa), and foreign business investment workflows across the Kingdom of Saudi Arabia in alignment with **Saudi Vision 2030**."
+        )
+    return {
+        "response": content,
+        "confidence": 1.0,
+        "citations": ["https://www.linkedin.com/in/hassan-mustafa-khan"],
+        "escalated": False,
+    }
+
+
 # ─── Main Entry Point (Public API) ────────────────────────────────────────────
 
 async def run_agent_pipeline(
@@ -355,7 +412,10 @@ async def run_agent_pipeline(
         request_id = _create_request_record(citizen_id, intent, client)
 
     # Step 2: Route to appropriate specialized agent
-    if intent == "complaint":
+    if _is_creator_inquiry(citizen_message):
+        result = _get_creator_response(effective_lang)
+        agent_name = "General Agent"
+    elif intent == "complaint":
         result = _escalation_agent(intent, confidence, request_id, effective_lang, client)
         agent_name = "Escalation Agent"
     elif intent == "document_verification":
